@@ -7,9 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	_ "github.com/joho/godotenv/autoload"
-	// _ "github.com/lib/pq"
-	// "github.com/spf13/viper"
+	"github.com/joho/godotenv"
 )
 
 // Config stores all configuration of the application
@@ -31,6 +29,11 @@ type Config struct {
 
 // LoadEnvConfig reads configuration from file or env variables
 func LoadEnvConfig(path string) (config Config) {
+	err := godotenv.Load(path)
+	if err != nil {
+		log.Fatal("Cannot load env:", err)
+	}
+
 	config.GinMode = os.Getenv("GIN_MODE")
 
 	config.MongoDBSource = os.Getenv("MONGO_DB_SOURCE")

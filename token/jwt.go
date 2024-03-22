@@ -14,7 +14,10 @@ type JWTToken struct {
 	config *utils.Config
 }
 
-var ErrInvalidToken = errors.New("invalid authentication token")
+var (
+	ErrInvalidToken = errors.New("invalid authentication token")
+	ErrExpiredToken = errors.New("token has expired")
+)
 
 func NewJWTToken(cfg *utils.Config) *JWTToken {
 	return &JWTToken{
