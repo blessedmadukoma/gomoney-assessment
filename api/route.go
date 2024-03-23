@@ -39,23 +39,23 @@ func Routes(router *gin.Engine, srv *Server) {
 		// }
 
 		// teams routes
-		teamsRoute := routes.Group("/teams")
+		teamsRoute := routes.Group("/teams").Use(authMiddleware(*tokenController))
 		{
-			teamsRoute.POST("/", srv.createTeam, AuthenticatedMiddleware())
+			teamsRoute.POST("/", srv.createTeam, isAdminMiddleware(srv.collections))
 			teamsRoute.GET("/", srv.getTeams)
 			teamsRoute.GET("/:id", srv.getTeam)
-			teamsRoute.PATCH("/:id", srv.editTeam, isAdminMiddleware())
-			teamsRoute.DELETE("/:id", srv.removeTeam, isAdminMiddleware())
+			teamsRoute.PATCH("/:id", srv.editTeam, isAdminMiddleware(srv.collections))
+			teamsRoute.DELETE("/:id", srv.removeTeam, isAdminMiddleware(srv.collections))
 		}
 
 		// fixtures routes
 		fixturesRoute := routes.Group("/fixtures")
 		{
-			fixturesRoute.POST("/", srv.createFixture, isAdminMiddleware())
+			fixturesRoute.POST("/", srv.createFixture, isAdminMiddleware(srv.collections))
 			fixturesRoute.GET("/", srv.getFixtures)
 			fixturesRoute.GET("/:id", srv.getFixture)
-			fixturesRoute.PATCH("/:id", srv.editFixture, isAdminMiddleware())
-			fixturesRoute.DELETE("/:id", srv.removeFixture, isAdminMiddleware())
+			fixturesRoute.PATCH("/:id", srv.editFixture, isAdminMiddleware(srv.collections))
+			fixturesRoute.DELETE("/:id", srv.removeFixture, isAdminMiddleware(srv.collections))
 		}
 	}
 }

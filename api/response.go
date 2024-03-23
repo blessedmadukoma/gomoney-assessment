@@ -32,9 +32,6 @@ func errorResponse(s string, err error) ResponseMessage {
 			Data:    nil,
 		}
 
-		fmt.Println("response:", response)
-
-		// return gin.H{"error: ": s + " -> " + err.Error()}
 		return response
 	}
 

@@ -1,9 +1,21 @@
 package api
 
-import "github.com/gin-gonic/gin"
+import (
+	"net/http"
+
+	db "github.com/blessedmadukoma/gomoney-assessment/db/models"
+	"github.com/gin-gonic/gin"
+)
 
 func (srv *Server) createTeam(ctx *gin.Context) {
-	return
+	var teamsParams db.TeamsParams
+
+	if err := ctx.ShouldBindJSON(&teamsParams); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse("cannot bind teams data", err))
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, teamsParams)
 }
 
 func (srv *Server) getTeams(ctx *gin.Context) {

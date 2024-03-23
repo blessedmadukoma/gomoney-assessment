@@ -17,15 +17,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type UserResponse struct {
-	ID        int64     `json:"id"`
-	Email     string    `json:"email"`
-	FirstName string    `json:"firstname"`
-	LastName  string    `json:"lastname"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
 type Role string
 
 const (
@@ -34,7 +25,7 @@ const (
 )
 
 func (srv *Server) register(ctx *gin.Context) {
-	var user db.UserParams
+	var user db.RegisterParams
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse("cannot bind user data", err))
@@ -62,7 +53,7 @@ func (srv *Server) register(ctx *gin.Context) {
 	if err != nil {
 
 		if er, ok := err.(mongo.WriteException); ok && er.WriteErrors[0].Code == 11000 {
-			ctx.JSON(http.StatusBadRequest, errorResponse("user with email already exist", er))
+			ctx.JSON(http.StatusBadRequest, errorResponse("user already exists", er))
 			return
 		}
 
@@ -79,7 +70,7 @@ func (srv *Server) register(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("could not create index for email", err))
 	}
 
-	var newUser *db.UserResponse
+	var newUser *db.UserParams
 	query := bson.M{"_id": res.InsertedID}
 
 	err = srv.collections["users"].FindOne(ctx, query).Decode(&newUser)
@@ -89,7 +80,7 @@ func (srv *Server) register(ctx *gin.Context) {
 	}
 
 	data := gin.H{
-		"user": db.ToUserResponse(&user),
+		"user": db.ToUserResponse(newUser),
 	}
 
 	ctx.JSON(http.StatusCreated, successResponse("user created successfully", data))
