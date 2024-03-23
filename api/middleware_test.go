@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	// db "trackit/db/sqlc"
-
 	"github.com/blessedmadukoma/gomoney-assessment/token"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,8 +14,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 )
-
-// var tokenController *token.JWTToken
 
 func addAuthorization(t *testing.T, request *http.Request, tokenController *token.JWTToken, authorizationType string, userId primitive.ObjectID, duration time.Duration) {
 	tokenString, err := tokenController.CreateToken(userId, duration)

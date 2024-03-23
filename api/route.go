@@ -21,18 +21,18 @@ func Routes(router *gin.Engine, srv *Server) {
 			authRoute.POST("/logout", srv.logout)
 		}
 
-		// // user routes
-		// userRoute := routes.Group("/user")
+		// // user routes: update user profile, delete user profile
+		// userRoute := routes.Group("/user").Use(authMiddleware())
 		// {
-		// 	// userRoute.POST("/", srv.CreateUser)
-		// 	userRoute.GET("/", srv.GetUsers)
-		// 	userRoute.GET("/:id", srv.GetUserByID)
-		// 	// userRoute.GET("/:email", srv.GetUserByEmail)
+		// 	// userRoute.PATCH("/:id", isAdminMiddleware(srv.collections), srv.CreateUser)
+		// 	userRoute.GET("/", isAdminMiddleware(srv.collections), srv.GetUsers)
+		// 	userRoute.GET("/:id", isAdminMiddleware(srv.collections), srv.GetUserByID)
+		// 	// userRoute.GET("/:email", isAdminMiddleware(srv.collections), srv.GetUserByEmail)
+		// 	// userRoute.DELETE("/:id", isAdminMiddleware(srv.collections), srv.DeleteUser)
 		// }
 
 		// teams routes
 		teamsRoute := routes.Group("/teams").Use(authMiddleware())
-		// teamsRoute := routes.Group("/teams").Use(authMiddleware(*tokenController))
 		{
 			teamsRoute.POST("/", isAdminMiddleware(srv.collections), srv.createTeam)
 			teamsRoute.GET("/", srv.getTeams)

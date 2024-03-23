@@ -1,7 +1,7 @@
 package api
 
 import (
-	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -36,14 +36,20 @@ func isAdminMiddleware(collections map[string]*mongo.Collection) gin.HandlerFunc
 		var user struct {
 			Role string `bson:"role"`
 		}
-		err := collections["users"].FindOne(context.Background(), bson.M{"_id": userId}).Decode(&user)
+
+		fmt.Println("user ID:", userId)
+
+		err := collections["users"].FindOne(ctx, bson.M{"_id": userId}).Decode(&user)
+		fmt.Println("user:", user)
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse("failed to check user role", err))
 			return
 		}
 
+		fmt.Println("user role:", user.Role)
+
 		if user.Role != "admin" {
-			ctx.JSON(http.StatusUnauthorized, errorResponse("unauthorized user", nil))
+			ctx.JSON(http.StatusUnauthorized, errorResponse("unauthorized user - role not supported", nil))
 			ctx.Abort()
 			return
 		}
