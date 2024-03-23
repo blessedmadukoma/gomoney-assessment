@@ -36,6 +36,7 @@ func Routes(router *gin.Engine, srv *Server) {
 		{
 			teamsRoute.POST("/", isAdminMiddleware(srv.collections), srv.createTeam)
 			teamsRoute.GET("/", srv.getTeams)
+			teamsRoute.GET("/search", srv.searchTeams)
 			teamsRoute.GET("/:id", srv.getTeam)
 			teamsRoute.PATCH("/:id", isAdminMiddleware(srv.collections), srv.editTeam)
 			teamsRoute.DELETE("/:id", isAdminMiddleware(srv.collections), srv.removeTeam)
