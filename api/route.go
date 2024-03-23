@@ -2,14 +2,9 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	// swaggerFiles "github.com/swaggo/files"
-	// ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func Routes(router *gin.Engine, srv *Server) {
-	// router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-
-	// routes := router.Group("/api", srv.rateLimit())
 	routes := router.Group("/api")
 	{
 
@@ -33,29 +28,26 @@ func Routes(router *gin.Engine, srv *Server) {
 		// 	userRoute.GET("/", srv.GetUsers)
 		// 	userRoute.GET("/:id", srv.GetUserByID)
 		// 	// userRoute.GET("/:email", srv.GetUserByEmail)
-
-		// 	userRoute.POST("/expense", srv.CreateExpense)
-		// 	userRoute.GET("/expense", srv.GetExpenses)
 		// }
 
 		// teams routes
 		teamsRoute := routes.Group("/teams").Use(authMiddleware(*tokenController))
 		{
-			teamsRoute.POST("/", srv.createTeam, isAdminMiddleware(srv.collections))
+			teamsRoute.POST("/", isAdminMiddleware(srv.collections), srv.createTeam)
 			teamsRoute.GET("/", srv.getTeams)
 			teamsRoute.GET("/:id", srv.getTeam)
-			teamsRoute.PATCH("/:id", srv.editTeam, isAdminMiddleware(srv.collections))
-			teamsRoute.DELETE("/:id", srv.removeTeam, isAdminMiddleware(srv.collections))
+			teamsRoute.PATCH("/:id", isAdminMiddleware(srv.collections), srv.editTeam)
+			teamsRoute.DELETE("/:id", isAdminMiddleware(srv.collections), srv.removeTeam)
 		}
 
 		// fixtures routes
-		fixturesRoute := routes.Group("/fixtures")
+		fixturesRoute := routes.Group("/fixtures").Use(authMiddleware(*tokenController))
 		{
-			fixturesRoute.POST("/", srv.createFixture, isAdminMiddleware(srv.collections))
+			fixturesRoute.POST("/", isAdminMiddleware(srv.collections), srv.createFixture)
 			fixturesRoute.GET("/", srv.getFixtures)
 			fixturesRoute.GET("/:id", srv.getFixture)
-			fixturesRoute.PATCH("/:id", srv.editFixture, isAdminMiddleware(srv.collections))
-			fixturesRoute.DELETE("/:id", srv.removeFixture, isAdminMiddleware(srv.collections))
+			fixturesRoute.PATCH("/:id", isAdminMiddleware(srv.collections), srv.editFixture)
+			fixturesRoute.DELETE("/:id", isAdminMiddleware(srv.collections), srv.removeFixture)
 		}
 	}
 }
