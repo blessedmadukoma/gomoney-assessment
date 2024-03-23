@@ -12,6 +12,27 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+func (srv *Server) teamExists(ctx *gin.Context, teamName string) bool {
+	filter := bson.M{"teamname": teamName}
+	count, err := srv.collections["teams"].CountDocuments(ctx, filter)
+	if err != nil {
+		// Log the error or handle it as needed
+		return false
+	}
+	return count > 0
+}
+
+func (srv *Server) getShortName(ctx *gin.Context, teamName string) string {
+	var teamInfo db.TeamsParams
+	filter := bson.M{"teamname": teamName}
+	err := srv.collections["teams"].FindOne(ctx, filter).Decode(&teamInfo)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, errorResponse("failed to find team", err))
+	}
+
+	return teamInfo.ShortName
+}
+
 func (srv *Server) createTeam(ctx *gin.Context) {
 	var teamsParams db.CreateTeamsParams
 

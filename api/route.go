@@ -47,9 +47,9 @@ func Routes(router *gin.Engine, srv *Server) {
 		{
 			fixturesRoute.POST("/", isAdminMiddleware(srv.collections), srv.createFixture)
 			fixturesRoute.GET("/", srv.getFixtures)
-			fixturesRoute.GET("/:id", srv.getFixture)
-			fixturesRoute.PATCH("/:id", isAdminMiddleware(srv.collections), srv.editFixture)
-			fixturesRoute.DELETE("/:id", isAdminMiddleware(srv.collections), srv.removeFixture)
+			// fixturesRoute.GET("/:id", srv.getFixture)
+			// fixturesRoute.PATCH("/:id", isAdminMiddleware(srv.collections), srv.editFixture)
+			// fixturesRoute.DELETE("/:id", isAdminMiddleware(srv.collections), srv.removeFixture)
 		}
 	}
 }
