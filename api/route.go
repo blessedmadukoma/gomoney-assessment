@@ -31,7 +31,8 @@ func Routes(router *gin.Engine, srv *Server) {
 		// }
 
 		// teams routes
-		teamsRoute := routes.Group("/teams").Use(authMiddleware(*tokenController))
+		teamsRoute := routes.Group("/teams").Use(authMiddleware())
+		// teamsRoute := routes.Group("/teams").Use(authMiddleware(*tokenController))
 		{
 			teamsRoute.POST("/", isAdminMiddleware(srv.collections), srv.createTeam)
 			teamsRoute.GET("/", srv.getTeams)
@@ -41,7 +42,7 @@ func Routes(router *gin.Engine, srv *Server) {
 		}
 
 		// fixtures routes
-		fixturesRoute := routes.Group("/fixtures").Use(authMiddleware(*tokenController))
+		fixturesRoute := routes.Group("/fixtures").Use(authMiddleware())
 		{
 			fixturesRoute.POST("/", isAdminMiddleware(srv.collections), srv.createFixture)
 			fixturesRoute.GET("/", srv.getFixtures)

@@ -2,8 +2,6 @@ package api
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -13,7 +11,6 @@ import (
 
 	// "trackit/token"
 
-	"github.com/blessedmadukoma/gomoney-assessment/token"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -36,18 +33,17 @@ func isAdminMiddleware(collections map[string]*mongo.Collection) gin.HandlerFunc
 		userId := getAuthorizationPayload(ctx)
 
 		// check users table to see if the userId has a role of admin
-		// Query the users collection in MongoDB to check if the user has a role of admin
 		var user struct {
 			Role string `bson:"role"`
 		}
 		err := collections["users"].FindOne(context.Background(), bson.M{"_id": userId}).Decode(&user)
 		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "failed to check user role"})
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse("failed to check user role", err))
 			return
 		}
 
 		if user.Role != "admin" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "user is not an admin"})
+			ctx.JSON(http.StatusUnauthorized, errorResponse("unauthorized user", nil))
 			ctx.Abort()
 			return
 		}
@@ -58,81 +54,7 @@ func isAdminMiddleware(collections map[string]*mongo.Collection) gin.HandlerFunc
 	}
 }
 
-// authMiddleware authorizes/validates a user
-// func authMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
-// 	return func(ctx *gin.Context) {
-// 		authorizationHeader := ctx.GetHeader(authorizationHeaderKey)
-// 		if len(authorizationHeader) == 0 {
-// 			err := errors.New("authorization header not provided")
-// 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse("unauthorized", err))
-// 			return
-// 		}
-
-// 		fields := strings.Fields(authorizationHeader)
-// 		if len(fields) < 2 {
-// 			err := errors.New("invalid authorization header format")
-// 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse("unauthorized", err))
-// 			return
-// 		}
-
-// 		authorizationType := strings.ToLower(fields[0])
-// 		if authorizationType != authorizationTypeBearer {
-// 			err := fmt.Errorf("unsupported authorization type %s", authorizationType)
-// 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse("unauthorized", err))
-// 			return
-// 		}
-
-// 		accessToken := fields[1]
-// 		payload, err := tokenMaker.VerifyToken(accessToken)
-// 		if err != nil {
-// 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse("invalid access token", err))
-// 			return
-// 		}
-
-// 		// store payload in the context
-// 		ctx.Set(authorizationPayloadKey, payload)
-// 		ctx.Next()
-// 	}
-// }
-
-// authMiddleware authorizes/validates a user
-func authMiddleware(tokenController token.JWTToken) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		authorizationHeader := ctx.GetHeader(authorizationHeaderKey)
-		if len(authorizationHeader) == 0 {
-			err := errors.New("authorization header not provided")
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse("unauthorized", err))
-			return
-		}
-
-		fields := strings.Fields(authorizationHeader)
-		if len(fields) < 2 {
-			err := errors.New("invalid authorization header format")
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse("unauthorized", err))
-			return
-		}
-
-		authorizationType := strings.ToLower(fields[0])
-		if authorizationType != authorizationTypeBearer {
-			err := fmt.Errorf("unsupported authorization type %s", authorizationType)
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse("unauthorized", err))
-			return
-		}
-
-		accessToken := fields[1]
-		payload, err := tokenController.VerifyToken(accessToken)
-		if err != nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse("invalid access token", err))
-			return
-		}
-
-		// store payload in the context
-		ctx.Set(authorizationPayloadKey, payload)
-		ctx.Next()
-	}
-}
-
-func AuthenticatedMiddleware() gin.HandlerFunc {
+func authMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
 		userId := getAuthorizationPayload(ctx)
@@ -147,7 +69,7 @@ func getAuthorizationPayload(ctx *gin.Context) primitive.ObjectID {
 	token := ctx.GetHeader("Authorization")
 
 	if token == "" {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized request"})
+		ctx.JSON(http.StatusUnauthorized, errorResponse("unauthorized request", nil))
 		ctx.Abort()
 		return primitive.ObjectID{}
 	}
@@ -155,14 +77,14 @@ func getAuthorizationPayload(ctx *gin.Context) primitive.ObjectID {
 	splitToken := strings.Split(token, " ")
 
 	if len(splitToken) != 2 || strings.ToLower(splitToken[0]) != "bearer" {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "invalid authentication token"})
+		ctx.JSON(http.StatusUnauthorized, errorResponse("invalid authentication token", nil))
 		ctx.Abort()
 		return primitive.ObjectID{}
 	}
 
 	userId, err := tokenController.VerifyToken(splitToken[1])
 	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
+		ctx.JSON(http.StatusUnauthorized, errorResponse("failed to verify token", err))
 		ctx.Abort()
 		return primitive.ObjectID{}
 	}

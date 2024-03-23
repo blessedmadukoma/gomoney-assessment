@@ -87,7 +87,7 @@ func TestAuthMiddleware(t *testing.T) {
 			server := newTestServer(t, map[string]*mongo.Collection{})
 
 			authPath := "/api/auth"
-			server.router.GET(authPath, AuthenticatedMiddleware(),
+			server.router.GET(authPath, authMiddleware(),
 				func(ctx *gin.Context) {
 					ctx.JSON(http.StatusOK, gin.H{})
 				},
