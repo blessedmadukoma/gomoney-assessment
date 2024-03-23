@@ -14,6 +14,7 @@ import (
 type Config struct {
 	GinMode              string        `mapstructure:"GIN_MODE"`
 	MongoDBSource        string        `mapstructure:"MONGO_DB_SOURCE"`
+	MondoDBDatabase      string        `mapstructure:"MONGO_INITDB_DATABASE"`
 	RedisDBSource        string        `mapstructure:"REDIS_DB_SOURCE"`
 	TokenSymmetricKey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
 	Port                 string        `mapstructure:"PORT"`
@@ -37,6 +38,7 @@ func LoadEnvConfig(path string) (config Config) {
 	config.GinMode = os.Getenv("GIN_MODE")
 
 	config.MongoDBSource = os.Getenv("MONGO_DB_SOURCE")
+	config.MondoDBDatabase = os.Getenv("MONGO_INITDB_DATABASE")
 
 	config.RedisDBSource = os.Getenv("REDIS_DB_SOURCE")
 

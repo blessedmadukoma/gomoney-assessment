@@ -22,6 +22,7 @@ func Routes(router *gin.Engine, srv *Server) {
 			// authRoute.GET("/current_user", srv.getCurrentUserBySession)
 			authRoute.POST("/login", srv.login)
 			authRoute.POST("/register", srv.register)
+			authRoute.POST("/refresh", srv.refresh)
 			authRoute.POST("/logout", srv.logout)
 		}
 

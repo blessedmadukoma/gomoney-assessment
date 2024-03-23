@@ -18,7 +18,7 @@ var ()
 func main() {
 	fmt.Println("Hello from GoMoney API! Starting Server...")
 
-	config := utils.LoadEnvConfig(".")
+	config := utils.LoadEnvConfig(".env")
 	// fmt.Println(config)
 
 	ctx := context.Background()
@@ -45,7 +45,18 @@ func main() {
 
 	// store := db.NewStore(conn)
 	// server, err := api.NewServer(config, store)
-	server, err := api.NewServer(config)
+
+	// Get handles to the database and collections
+	db := mongoclient.Database(config.MondoDBDatabase)
+
+	collections := make(map[string]*mongo.Collection)
+
+	// Add collections to the map
+	collections["users"] = db.Collection("users")
+	collections["teams"] = db.Collection("teams")
+	collections["fixtures"] = db.Collection("fixtures")
+
+	server, err := api.NewServer(config, collections)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}

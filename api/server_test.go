@@ -7,6 +7,7 @@ import (
 
 	// db "trackit/db/sqlc"
 	"github.com/blessedmadukoma/gomoney-assessment/utils"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gin-gonic/gin"
 	// _ "github.com/lib/pq"
@@ -14,14 +15,14 @@ import (
 )
 
 // func newTestServer(t *testing.T, store db.Store) *Server {
-func newTestServer(t *testing.T) *Server {
+func newTestServer(t *testing.T, collections map[string]*mongo.Collection) *Server {
 	config := utils.Config{
 		TokenSymmetricKey:   utils.RandomString(32),
 		AccessTokenDuration: time.Minute,
 	}
 
 	// server, err := NewServer(config, &store)
-	server, err := NewServer(config)
+	server, err := NewServer(config, collections)
 	require.NoError(t, err)
 
 	return server

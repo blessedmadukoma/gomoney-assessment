@@ -8,15 +8,22 @@ import (
 
 	"github.com/blessedmadukoma/gomoney-assessment/token"
 	"github.com/blessedmadukoma/gomoney-assessment/utils"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gin-gonic/gin"
 )
 
 var tokenController *token.JWTToken
 
+// var mongoCollection *mongo.Collection
+
 // Server struct serves HTTP requests for our banking service
 type Server struct {
-	config utils.Config
+	config      utils.Config
+	collections map[string]*mongo.Collection
+
+	// collection *mongo.Collection
+
 	// store      *db.Store
 	router *gin.Engine
 }
@@ -28,13 +35,14 @@ func healthy(ctx *gin.Context) {
 
 // NewServer creates a new HTTP server and setup routing
 // func NewServer(config utils.Config, store *db.Store) (*Server, error) {
-func NewServer(config utils.Config) (*Server, error) {
+func NewServer(config utils.Config, collections map[string]*mongo.Collection) (*Server, error) {
 
 	tokenController = token.NewJWTToken(&config)
 
 	server := &Server{
 		// 	store:      store,
-		config: config,
+		collections: collections,
+		config:      config,
 		// 	tokenMaker: tokenMaker,
 	}
 

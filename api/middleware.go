@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/time/rate"
 )
 
@@ -81,13 +82,13 @@ func AuthenticatedMiddleware() gin.HandlerFunc {
 }
 
 // getAuthorizationPayload retrieves the authorization payload from the context
-func getAuthorizationPayload(ctx *gin.Context) int64 {
+func getAuthorizationPayload(ctx *gin.Context) primitive.ObjectID {
 	token := ctx.GetHeader("Authorization")
 
 	if token == "" {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized request"})
 		ctx.Abort()
-		return 0
+		return primitive.ObjectID{}
 	}
 
 	splitToken := strings.Split(token, " ")
@@ -95,14 +96,14 @@ func getAuthorizationPayload(ctx *gin.Context) int64 {
 	if len(splitToken) != 2 || strings.ToLower(splitToken[0]) != "bearer" {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"message": "invalid authentication token"})
 		ctx.Abort()
-		return 0
+		return primitive.ObjectID{}
 	}
 
 	userId, err := tokenController.VerifyToken(splitToken[1])
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
 		ctx.Abort()
-		return 0
+		return primitive.ObjectID{}
 	}
 
 	return userId

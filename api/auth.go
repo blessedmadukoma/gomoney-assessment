@@ -6,10 +6,15 @@ import (
 	// db "fintrax/db/sqlc"
 
 	"net/http"
+	"strings"
 	"time"
 
+	db "github.com/blessedmadukoma/gomoney-assessment/db/models"
+	"github.com/blessedmadukoma/gomoney-assessment/utils"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type UserResponse struct {
@@ -28,26 +33,8 @@ const (
 	Fan        = "fan"
 )
 
-type RegisterParams struct {
-	ID        primitive.ObjectID `bson:"_id"`
-	FirstName string             `json:"firstname" binding:"required"`
-	LastName  string             `json:"lastname" binding:"required"`
-	Email     string             `json:"email" binding:"required,email"`
-	Role      string             `json:"role"`
-	Password  string             `json:"password" binding:"required"`
-}
-
-// func (u UserResponse) toNewUserResponse(user *db.User) *UserResponse {
-// 	return &UserResponse{
-// 		ID:        user.ID,
-// 		Email:     user.Email,
-// 		CreatedAt: user.CreatedAt,
-// 		UpdatedAt: user.UpdatedAt,
-// 	}
-// }
-
 func (srv *Server) register(ctx *gin.Context) {
-	var user RegisterParams
+	var user db.UserParams
 
 	if err := ctx.ShouldBindJSON(&user); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse("cannot bind user data", err))
@@ -58,47 +45,59 @@ func (srv *Server) register(ctx *gin.Context) {
 		user.Role = string(Fan)
 	}
 
-	// hashedPassword, err := utils.HashPassword(user.Password)
-	// if err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// 	return
-	// }
+	user.CreatedAt = time.Now()
+	user.UpdatedAt = user.CreatedAt
+	user.Email = strings.ToLower(user.Email)
 
-	// arg := db.CreateUserParams{
-	// 	Email:          user.Email,
-	// 	HashedPassword: hashedPassword,
-	// }
+	hashedPassword, err := utils.HashPassword(user.Password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse("could not hash password", err))
+		return
+	}
 
-	// newUser, err := a.server.queries.CreateUser(context.Background(), arg)
-	// if err != nil {
-	// 	if pgErr, ok := err.(*pq.Error); ok {
-	// 		// violated unique constraint i.e. user already exists
-	// 		if pgErr.Code == "23505" {
-	// 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	// 			return
-	// 		}
-	// 	}
+	user.Password = hashedPassword
 
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// 	return
-	// }
+	res, err := srv.collections["users"].InsertOne(ctx, &user)
 
-	// c.JSON(http.StatusCreated, UserResponse{}.toNewUserResponse(&newUser))
+	if err != nil {
+
+		if er, ok := err.(mongo.WriteException); ok && er.WriteErrors[0].Code == 11000 {
+			ctx.JSON(http.StatusBadRequest, errorResponse("user with email already exist", er))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse("could not create user", err))
+		return
+	}
+
+	// Create a unique index for the email field
+	opt := options.Index()
+	opt.SetUnique(true)
+	index := mongo.IndexModel{Keys: bson.M{"email": 1}, Options: opt}
+
+	if _, err := srv.collections["users"].Indexes().CreateOne(ctx, index); err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse("could not create index for email", err))
+	}
+
+	var newUser *db.UserResponse
+	query := bson.M{"_id": res.InsertedID}
+
+	err = srv.collections["users"].FindOne(ctx, query).Decode(&newUser)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse("unable to find newly created user", err))
+		return
+	}
+
 	data := gin.H{
-		"user": user,
+		"user": db.ToUserResponse(&user),
 	}
 
 	ctx.JSON(http.StatusCreated, successResponse("user created successfully", data))
 }
 
-func (srv *Server) logout(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, gin.H{"message": "User logged out successfully"})
-	return
-}
-
 type LoginParams struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+	Email    string `json:"email" bson:"email" binding:"required,email"`
+	Password string `json:"password" bson:"password" binding:"required"`
 }
 
 func (srv *Server) login(ctx *gin.Context) {
@@ -108,35 +107,50 @@ func (srv *Server) login(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse("cannot bind user data", err))
 		return
 	}
-
-	// dbUser, err := a.server.queries.GetUserByEmail(ctx, user.Email)
-
-	// if err != nil {
-	// 	if err == sql.ErrNoRows {
-	// 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("user not found: %v", err.Error())})
-	// 		return
-	// 	}
-
-	// 	ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// 	return
-	// }
-
-	// if err := utils.VerifyPassword(user.Password, dbUser.HashedPassword); err != nil {
-	// 	ctx.JSON(http.StatusUnauthorized, gin.H{"error": fmt.Sprintf("invalid password: %v", err.Error())})
-	// 	return
-	// }
-
-	dbUserID := 1
-
-	token, err := tokenController.CreateToken(int64(dbUserID), srv.config.AccessTokenDuration)
-	// token, err := tokenController.CreateToken(dbUser.ID, srv.config.AccessTokenDuration)
+	dbUser, err := srv.FindUserByEmail(ctx, user.Email)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse("could not create token: %v", err))
+		if err == mongo.ErrNoDocuments {
+			ctx.JSON(http.StatusBadRequest, errorResponse("no user record found", err))
+			return
+		}
+
+		ctx.JSON(http.StatusBadRequest, errorResponse("", err))
+		return
+	}
+
+	if err := utils.VerifyPassword(user.Password, dbUser.Password); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse("invalid password", err))
+		return
+	}
+
+	// Generate Tokens
+	access_token, err := tokenController.CreateToken(dbUser.ID, srv.config.AccessTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
+		return
+	}
+
+	refresh_token, err := tokenController.CreateToken(dbUser.ID, srv.config.RefreshTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse("could not create token", err))
+		return
 	}
 
 	data := gin.H{
-		"token": token,
+		"access_token":  access_token,
+		"refresh_token": refresh_token,
+		"user":          db.ToUserResponse(dbUser),
 	}
 
 	ctx.JSON(http.StatusOK, successResponse("login successful", data))
+}
+
+func (srv *Server) logout(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, gin.H{"message": "User logged out successfully"})
+	return
+}
+
+func (srv *Server) refresh(ctx *gin.Context) {
+	ctx.JSON(http.StatusOK, gin.H{"message": "User logged out successfully"})
+	return
 }

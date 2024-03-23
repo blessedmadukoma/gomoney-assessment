@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/blessedmadukoma/gomoney-assessment/utils"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/require"
@@ -15,7 +16,7 @@ import (
 var tokenController = NewJWTToken(&utils.Config{})
 
 func TestJWTMaker(t *testing.T) {
-	userId := utils.RandomInt(0, 3)
+	userId := primitive.NewObjectID()
 
 	token, err := tokenController.CreateToken(userId, time.Minute)
 	require.NoError(t, err)
@@ -32,9 +33,9 @@ func TestExpiredJWTToken(t *testing.T) {
 	// maker, err := NewJWTMaker(util.RandomString(32))
 	// require.NoError(t, err)
 
-	userId := 1
+	userId := primitive.NewObjectID()
 
-	tokenString, err := tokenController.CreateToken(int64(userId), -time.Minute)
+	tokenString, err := tokenController.CreateToken(userId, -time.Minute)
 	require.NoError(t, err)
 	require.NotEmpty(t, tokenString)
 
@@ -45,7 +46,8 @@ func TestExpiredJWTToken(t *testing.T) {
 }
 
 func TestInvalidJWTTokenAlgNone(t *testing.T) {
-	userId := utils.RandomInt(0, 3)
+	userId := primitive.NewObjectID()
+
 	claims := jwtClaim{
 		UserID:    userId,
 		ExpiredAt: time.Now().Add(time.Minute * 15).Unix(),

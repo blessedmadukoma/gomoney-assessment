@@ -10,6 +10,8 @@ import (
 	// db "trackit/db/sqlc"
 
 	"github.com/blessedmadukoma/gomoney-assessment/token"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
@@ -17,7 +19,7 @@ import (
 
 // var tokenController *token.JWTToken
 
-func addAuthorization(t *testing.T, request *http.Request, tokenController *token.JWTToken, authorizationType string, userId int64, duration time.Duration) {
+func addAuthorization(t *testing.T, request *http.Request, tokenController *token.JWTToken, authorizationType string, userId primitive.ObjectID, duration time.Duration) {
 	tokenString, err := tokenController.CreateToken(userId, duration)
 	require.NoError(t, err)
 	require.NotEmpty(t, tokenString)
@@ -35,7 +37,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenController *token.JWTToken) {
-				addAuthorization(t, request, tokenController, authorizationTypeBearer, 1, time.Minute)
+				addAuthorization(t, request, tokenController, authorizationTypeBearer, primitive.NewObjectID(), time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusOK, recorder.Code)
@@ -51,7 +53,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "UnsupportedAuthorization",
 			setupAuth: func(t *testing.T, request *http.Request, tokenController *token.JWTToken) {
-				addAuthorization(t, request, tokenController, "unsupported", 1, time.Minute)
+				addAuthorization(t, request, tokenController, "unsupported", primitive.NewObjectID(), time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -60,7 +62,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "InvalidAuthorizationFormat",
 			setupAuth: func(t *testing.T, request *http.Request, tokenController *token.JWTToken) {
-				addAuthorization(t, request, tokenController, "", 1, time.Minute)
+				addAuthorization(t, request, tokenController, "", primitive.NewObjectID(), time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -69,7 +71,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "ExpiredAuthorizationToken",
 			setupAuth: func(t *testing.T, request *http.Request, tokenController *token.JWTToken) {
-				addAuthorization(t, request, tokenController, authorizationTypeBearer, 1, -time.Minute)
+				addAuthorization(t, request, tokenController, authorizationTypeBearer, primitive.NewObjectID(), -time.Minute)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -82,7 +84,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 			// server := newTestServer(t, db.Store{})
-			server := newTestServer(t)
+			server := newTestServer(t, map[string]*mongo.Collection{})
 
 			authPath := "/api/auth"
 			server.router.GET(authPath, AuthenticatedMiddleware(),
