@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log"
 	"net/http"
 	"time"
 
@@ -93,7 +92,8 @@ func (srv *Server) getTeams(ctx *gin.Context) {
 	// Find all teams
 	cursor, err := srv.collections["teams"].Find(ctx, filter)
 	if err != nil {
-		log.Fatal(err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to find teams", err))
+		return
 	}
 	defer cursor.Close(ctx)
 

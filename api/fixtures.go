@@ -10,6 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rs/xid"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func (srv *Server) generateFixture(ctx *gin.Context, home, away string) string {
@@ -127,6 +129,124 @@ func (srv *Server) getFixtures(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, successResponse("fixtures retrieved successfully", fixtures))
 }
 
+func (srv *Server) getFixtureByLink(ctx *gin.Context) {
+	filter := bson.D{
+		{Key: "link", Value: ctx.Param("id")},
+	}
+
+	var fixture db.FixturesParams
+	err := srv.collections["fixtures"].FindOne(ctx, filter).Decode(&fixture)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			ctx.JSON(http.StatusNotFound, errorResponse("fixture not found", err))
+			return
+		} else {
+			ctx.JSON(http.StatusInternalServerError, errorResponse("error retrieving fixture", err))
+			return
+		}
+	}
+
+	ctx.JSON(http.StatusOK, successResponse("fixture retrieved successfully", fixture))
+}
+
+func (srv *Server) getFixtureByID(ctx *gin.Context) {
+	objectID, err := primitive.ObjectIDFromHex(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to verify fixture ID", err))
+		return
+	}
+
+	filter := bson.D{
+		{Key: "_id", Value: objectID},
+	}
+
+	var fixture db.FixturesParams
+	err = srv.collections["fixtures"].FindOne(ctx, filter).Decode(&fixture)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			ctx.JSON(http.StatusNotFound, errorResponse("fixture not found", err))
+			return
+		} else {
+			ctx.JSON(http.StatusInternalServerError, errorResponse("error retrieving fixture", err))
+			return
+		}
+	}
+
+	ctx.JSON(http.StatusOK, successResponse("fixture retrieved successfully", fixture))
+}
+
+func (srv *Server) editFixture(ctx *gin.Context) {
+	objectID, err := primitive.ObjectIDFromHex(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to verify fixture ID", err))
+		return
+	}
+
+	var payload bson.M
+	if err := ctx.ShouldBindJSON(&payload); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse("failed to bind payload data", err))
+		return
+	}
+
+	payload["updated_at"] = time.Now()
+
+	filter := bson.M{"_id": objectID}
+
+	update := bson.M{"$set": payload}
+
+	result, err := srv.collections["fixtures"].UpdateOne(ctx, filter, update)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse("error updating fixture", err))
+		return
+	}
+
+	if result.ModifiedCount == 0 {
+		ctx.JSON(http.StatusNotFound, errorResponse("fixture not modified", nil))
+		return
+	}
+
+	var updatedFixture *db.FixturesParams
+	query := bson.M{"_id": objectID}
+
+	err = srv.collections["fixtures"].FindOne(ctx, query).Decode(&updatedFixture)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse("failed to find updated fixture", err))
+		return
+	}
+
+	data := gin.H{
+		"fixture": db.ToFixturesResponse(updatedFixture),
+	}
+
+	// Return success response
+	ctx.JSON(http.StatusOK, successResponse("fixture updated successfully", data))
+}
+
+func (srv *Server) removeFixture(ctx *gin.Context) {
+	fixtureID := ctx.Param("id")
+
+	objectID, err := primitive.ObjectIDFromHex(fixtureID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse("invalid fixture ID", err))
+		return
+	}
+
+	filter := bson.M{"_id": objectID}
+
+	result, err := srv.collections["fixtures"].DeleteOne(ctx, filter)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to delete fixture", err))
+		return
+	}
+
+	if result.DeletedCount == 0 {
+		ctx.JSON(http.StatusNotFound, errorResponse("fixture not found", nil))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, successResponse("fixture deleted successfully", nil))
+}
+
 // func (srv *Server) searchFixtures(ctx *gin.Context) {
 // 	// Example of API endpoint: <<BASE_URL>>/api/fixtures/search?q=che -> to get `che`lsea or man`che`ster united
 
@@ -190,80 +310,4 @@ func (srv *Server) getFixtures(ctx *gin.Context) {
 // 	}
 
 // 	ctx.JSON(http.StatusOK, successResponse("fixture retrieved successfully", fixture))
-// }
-
-// func (srv *Server) getFixtureByLink(ctx *gin.Context) {
-// 	return
-// }
-
-// func (srv *Server) editFixture(ctx *gin.Context) {
-// 	objectID, err := primitive.ObjectIDFromHex(ctx.Param("id"))
-// 	if err != nil {
-// 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to verify fixture ID", err))
-// 		return
-// 	}
-
-// 	var payload bson.M
-// 	if err := ctx.ShouldBindJSON(&payload); err != nil {
-// 		ctx.JSON(http.StatusBadRequest, errorResponse("failed to bind payload data", err))
-// 		return
-// 	}
-
-// 	payload["updated_at"] = time.Now()
-
-// 	filter := bson.M{"_id": objectID}
-
-// 	update := bson.M{"$set": payload}
-
-// 	result, err := srv.collections["fixtures"].UpdateOne(ctx, filter, update)
-// 	if err != nil {
-// 		ctx.JSON(http.StatusInternalServerError, errorResponse("error updating fixture", err))
-// 		return
-// 	}
-
-// 	if result.ModifiedCount == 0 {
-// 		ctx.JSON(http.StatusNotFound, errorResponse("fixture not modified", nil))
-// 		return
-// 	}
-
-// 	var updatedFixture *db.FixturesParams
-// 	query := bson.M{"_id": objectID}
-
-// 	err = srv.collections["fixtures"].FindOne(ctx, query).Decode(&updatedFixture)
-// 	if err != nil {
-// 		ctx.JSON(http.StatusBadRequest, errorResponse("failed to find updated fixture", err))
-// 		return
-// 	}
-
-// 	data := gin.H{
-// 		"fixture": db.ToFixturesResponse(updatedFixture),
-// 	}
-
-// 	// Return success response
-// 	ctx.JSON(http.StatusOK, successResponse("fixture updated successfully", data))
-// }
-
-// func (srv *Server) removeFixture(ctx *gin.Context) {
-// 	fixtureID := ctx.Param("id")
-
-// 	objectID, err := primitive.ObjectIDFromHex(fixtureID)
-// 	if err != nil {
-// 		ctx.JSON(http.StatusBadRequest, errorResponse("invalid fixture ID", err))
-// 		return
-// 	}
-
-// 	filter := bson.M{"_id": objectID}
-
-// 	result, err := srv.collections["fixtures"].DeleteOne(ctx, filter)
-// 	if err != nil {
-// 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to delete fixture", err))
-// 		return
-// 	}
-
-// 	if result.DeletedCount == 0 {
-// 		ctx.JSON(http.StatusNotFound, errorResponse("fixture not found", nil))
-// 		return
-// 	}
-
-// 	ctx.JSON(http.StatusOK, successResponse("fixture deleted successfully", nil))
 // }
