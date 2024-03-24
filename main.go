@@ -54,8 +54,7 @@ func main() {
 	}
 
 	// seed database
-	// seeds.Execute(config, "SeedUsers", "SeedTeams", "SeedFixtures")
-	seeds.Execute(config, "TeamsSeeder", "FixturesSeeder")
+	seeds.Execute(config, "UsersSeeder", "TeamsSeeder", "FixturesSeeder")
 
 	// err = server.StartServer(config.ServerAddress)
 	err = server.StartServer(config.Port)

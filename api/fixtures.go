@@ -92,7 +92,6 @@ func (srv *Server) createFixture(ctx *gin.Context) {
 		return
 	}
 
-	// Prepare response data
 	data := gin.H{
 		"fixture": db.ToFixturesResponse(&newFixture),
 	}

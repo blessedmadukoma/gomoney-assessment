@@ -2,7 +2,7 @@ package data
 
 import db "github.com/blessedmadukoma/gomoney-assessment/db/models"
 
-var Users = []db.UserParams{
+var Users = []db.RegisterParams{
 	{
 		FirstName: "John",
 		LastName:  "Brown",
