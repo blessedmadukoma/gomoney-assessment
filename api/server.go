@@ -57,8 +57,8 @@ func NewServer(config utils.Config, collections map[string]*mongo.Collection, re
 	router.SetTrustedProxies(nil)
 	router.TrustedPlatform = gin.PlatformCloudflare
 
-	// server.Routes(router)
-	Routes(router, server)
+	server.Routes(router)
+	// Routes(router, server)
 
 	server.router = router
 
