@@ -128,9 +128,6 @@ func TestRegisterEnd2End(t *testing.T) {
 	}
 
 	user, password := randomUser(t)
-	// _, password := randomUser(t)
-
-	log.Println("server connected:", server)
 
 	testCases := []testCase{
 		{
@@ -182,12 +179,6 @@ func TestRegisterEnd2End(t *testing.T) {
 
 			// Check the response status code
 			assert.Equal(t, tc.expectedStatus, recorder.Code)
-
-			log.Println("Collections:", server.collections)
-
-			if server.collections["users"] == nil {
-				log.Println("Error: Users collection is nil")
-			}
 
 			// Optionally, check the response body
 			if tc.expectedBody != "" {

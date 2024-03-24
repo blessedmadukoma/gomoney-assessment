@@ -5,7 +5,6 @@ import (
 	// "database/sql"
 	// db "fintrax/db/sqlc"
 
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -107,8 +106,6 @@ func (srv *Server) login(ctx *gin.Context) {
 			return
 		}
 
-		log.Fatal("error finding user by email:", err)
-
 		ctx.JSON(http.StatusBadRequest, errorResponse("", err))
 		return
 	}
@@ -121,13 +118,13 @@ func (srv *Server) login(ctx *gin.Context) {
 	// Generate Tokens
 	access_token, err := tokenController.CreateToken(dbUser.ID, srv.config.AccessTokenDuration)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": "fail", "message": err.Error()})
+		ctx.JSON(http.StatusBadRequest, errorResponse("failed to create access token", err))
 		return
 	}
 
 	refresh_token, err := tokenController.CreateToken(dbUser.ID, srv.config.RefreshTokenDuration)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse("could not create token", err))
+		ctx.JSON(http.StatusBadRequest, errorResponse("could not create refresh token", err))
 		return
 	}
 

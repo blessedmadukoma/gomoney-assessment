@@ -3,7 +3,6 @@ package db_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/blessedmadukoma/gomoney-assessment/utils"
@@ -18,8 +17,6 @@ func TestMain(m *testing.M) {
 	config := utils.LoadEnvConfig("../../.env")
 
 	ctx := context.Background()
-
-	log.Println("Config in testdb:", config)
 
 	// ? Connect to MongoDB
 	mongoconn := options.Client().ApplyURI(config.MongoDBSource)

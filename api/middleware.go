@@ -176,7 +176,6 @@ func (srv *Server) rateLimit() gin.HandlerFunc {
 func CORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		// log.Println(c.Request.Header)
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, Origin, Cache-Control, X-Requested-With")
@@ -184,7 +183,7 @@ func CORS() gin.HandlerFunc {
 		// c.Writer.Header().Set("Access-Control-Allow-Methods", "PUT, DELETE")
 
 		if c.Request.Method == "OPTIONS" {
-			log.Println("got options and stopped")
+			// log.Println("got options and stopped")
 			c.AbortWithStatus(204)
 			return
 		}
