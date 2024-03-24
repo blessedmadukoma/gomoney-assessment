@@ -8,6 +8,7 @@ import (
 
 	"github.com/blessedmadukoma/gomoney-assessment/token"
 	"github.com/blessedmadukoma/gomoney-assessment/utils"
+	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gin-gonic/gin"
@@ -21,6 +22,7 @@ var tokenController *token.JWTToken
 type Server struct {
 	config      utils.Config
 	collections map[string]*mongo.Collection
+	redisclient *redis.Client
 
 	// collection *mongo.Collection
 
@@ -35,7 +37,7 @@ func healthy(ctx *gin.Context) {
 
 // NewServer creates a new HTTP server and setup routing
 // func NewServer(config utils.Config, store *db.Store) (*Server, error) {
-func NewServer(config utils.Config, collections map[string]*mongo.Collection) (*Server, error) {
+func NewServer(config utils.Config, collections map[string]*mongo.Collection, redisClient *redis.Client) (*Server, error) {
 
 	tokenController = token.NewJWTToken(&config)
 
@@ -43,6 +45,7 @@ func NewServer(config utils.Config, collections map[string]*mongo.Collection) (*
 		// 	store:      store,
 		collections: collections,
 		config:      config,
+		redisclient: redisClient,
 		// 	tokenMaker: tokenMaker,
 	}
 

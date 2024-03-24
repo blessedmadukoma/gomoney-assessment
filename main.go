@@ -26,6 +26,7 @@ func main() {
 	// connect to database
 	mongoclient, redisclient := dbConn(ctx, config)
 
+	// value, err := redisclient.Get(ctx, "teams").Result()
 	value, err := redisclient.Get(ctx, "test").Result()
 	defer mongoclient.Disconnect(ctx)
 
@@ -37,15 +38,6 @@ func main() {
 
 	log.Println("value from redis:", value)
 
-	// connect to database
-	// conn, err := sql.Open(config.DBDriver, config.DBSource)
-	// if err != nil {
-	// 	log.Fatal("cannot connect to db:", err)
-	// }
-
-	// store := db.NewStore(conn)
-	// server, err := api.NewServer(config, store)
-
 	// Get handles to the database and collections
 	db := mongoclient.Database(config.MondoDBDatabase)
 
@@ -56,7 +48,7 @@ func main() {
 	collections["teams"] = db.Collection("teams")
 	collections["fixtures"] = db.Collection("fixtures")
 
-	server, err := api.NewServer(config, collections)
+	server, err := api.NewServer(config, collections, redisclient)
 	if err != nil {
 		log.Fatal("cannot create server:", err)
 	}

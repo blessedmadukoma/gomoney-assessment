@@ -1,6 +1,8 @@
 package api
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -86,10 +88,22 @@ func (srv *Server) createTeam(ctx *gin.Context) {
 }
 
 func (srv *Server) getTeams(ctx *gin.Context) {
+	var teams []db.TeamsParams
 	// Define a filter to match all documents
 	filter := bson.D{}
 
-	// Find all teams
+	// get data from redis if not expired after 5 minutes: cache hit
+	teamsRedisData, err := srv.GetDataFromRedis(ctx, "teams", &teams)
+	if err == nil {
+		ctx.JSON(http.StatusOK, successResponse("teams retrieved successfully from redis", teamsRedisData))
+		return
+	}
+
+	log.Println("Cache Miss - failed to get data from redis:", err)
+
+	// if not, get from mongodb
+
+	// Find all teams from mongodb: cache miss
 	cursor, err := srv.collections["teams"].Find(ctx, filter)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to find teams", err))
@@ -98,7 +112,7 @@ func (srv *Server) getTeams(ctx *gin.Context) {
 	defer cursor.Close(ctx)
 
 	// Iterate over the cursor and decode each document into a Team struct
-	var teams []db.TeamsParams
+	// var teams []db.TeamsParams
 
 	for cursor.Next(ctx) {
 		var team db.TeamsParams
@@ -114,6 +128,14 @@ func (srv *Server) getTeams(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("cursor iteration error", err))
 		return
 	}
+
+	// store the data in redis
+	err = srv.SetDataIntoRedis(ctx, "teams", teams)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse("failed to set teams data to redis", err))
+		return
+	}
+
 	ctx.JSON(http.StatusOK, successResponse("teams retrieved successfully", teams))
 }
 
@@ -157,6 +179,8 @@ func (srv *Server) searchTeams(ctx *gin.Context) {
 }
 
 func (srv *Server) getTeam(ctx *gin.Context) {
+	var team db.TeamsParams
+
 	objectID, err := primitive.ObjectIDFromHex(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to verify team ID", err))
@@ -167,7 +191,16 @@ func (srv *Server) getTeam(ctx *gin.Context) {
 		{Key: "_id", Value: objectID},
 	}
 
-	var team db.TeamsParams
+	// get data from redis if not expired after 5 minutes: cache hit
+	teamData, err := srv.GetDataFromRedis(ctx, fmt.Sprintf("team-%s", objectID), &team)
+	if err == nil {
+		ctx.JSON(http.StatusOK, successResponse("teams retrieved successfully from redis", teamData))
+		return
+	}
+
+	log.Println("Cache Miss - failed to get team data from redis:", err)
+
+	//
 	err = srv.collections["teams"].FindOne(ctx, filter).Decode(&team)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -177,6 +210,13 @@ func (srv *Server) getTeam(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, errorResponse("error retrieving team", err))
 			return
 		}
+	}
+
+	// store the data in redis
+	err = srv.SetDataIntoRedis(ctx, fmt.Sprintf("team-%s", objectID), team)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse("failed to set teams data to redis", err))
+		return
 	}
 
 	ctx.JSON(http.StatusOK, successResponse("team retrieved successfully", team))
