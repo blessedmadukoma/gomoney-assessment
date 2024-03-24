@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/blessedmadukoma/gomoney-assessment/token"
+	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -80,7 +81,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 		t.Run(tc.name, func(t *testing.T) {
 			// server := newTestServer(t, db.Store{})
-			server := newTestServer(t, map[string]*mongo.Collection{})
+			server := newTestServer(t, map[string]*mongo.Collection{}, &redis.Client{})
 
 			authPath := "/api/auth"
 			server.router.GET(authPath, authMiddleware(),
