@@ -7,6 +7,7 @@ import (
 
 	"github.com/blessedmadukoma/gomoney-assessment/api"
 	"github.com/blessedmadukoma/gomoney-assessment/db"
+	"github.com/blessedmadukoma/gomoney-assessment/db/seeds"
 	"github.com/blessedmadukoma/gomoney-assessment/utils"
 	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,7 +16,7 @@ import (
 var ()
 
 func main() {
-	fmt.Println("Hello from GoMoney API! Starting Server...")
+	fmt.Println("Hello from GoMoney Assessment API! Starting Server...")
 
 	config := utils.LoadEnvConfig(".env")
 
@@ -52,6 +53,10 @@ func main() {
 		log.Fatal("cannot create server:", err)
 	}
 
+	// seed database
+	// seeds.Execute(config, "SeedUsers", "SeedTeams", "SeedFixtures")
+	seeds.Execute(config, "TeamsSeeder", "FixturesSeeder")
+
 	// err = server.StartServer(config.ServerAddress)
 	err = server.StartServer(config.Port)
 	if err != nil {
@@ -60,22 +65,6 @@ func main() {
 }
 
 func dbConn(ctx context.Context, config utils.Config) (*mongo.Client, *redis.Client) {
-	// ? Connect to MongoDB
-	// mongoconn := options.Client().ApplyURI(config.MongoDBSource)
-	// mongoclient, err := mongo.Connect(ctx, mongoconn)
-
-	// if err != nil {
-	// 	log.Fatal("unable to connect to mongodb:", err)
-	// 	return nil, nil
-	// }
-
-	// if err := mongoclient.Ping(ctx, readpref.Primary()); err != nil {
-	// 	log.Fatal("unable to ping mongodb:", err)
-	// 	return nil, nil
-	// }
-
-	// fmt.Println("MongoDB successfully connected...")
-
 	mongoclient, _ := db.ConnectMongoDB(ctx, config)
 
 	redisclient := db.ConnectRedis(ctx, config)

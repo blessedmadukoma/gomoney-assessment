@@ -62,9 +62,8 @@ func (srv *Server) createFixture(ctx *gin.Context) {
 
 	// Check if the fixture already exists
 	filter := bson.M{
-		"home": createParams.Home,
-		"away": createParams.Away,
-		// "link":    createParams.Link,  // link is unique, therefore, the fixture will always be unique
+		"home":    createParams.Home,
+		"away":    createParams.Away,
 		"status":  createParams.Status,
 		"fixture": createParams.Fixture,
 	}
