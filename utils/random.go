@@ -33,5 +33,10 @@ func RandomString(n int) string {
 
 // RandomEmail generates a random email
 func RandomEmail() string {
-	return fmt.Sprintf("%s@mailtest.com", RandomString(6))
+	return fmt.Sprintf("%s@gmail.com", RandomString(6))
+}
+
+// RandomName generate a random first and last name
+func RandomName() string {
+	return RandomString(6)
 }

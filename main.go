@@ -19,7 +19,6 @@ func main() {
 	fmt.Println("Hello from GoMoney API! Starting Server...")
 
 	config := utils.LoadEnvConfig(".env")
-	// fmt.Println(config)
 
 	ctx := context.Background()
 
@@ -33,7 +32,8 @@ func main() {
 	if err == redis.Nil {
 		fmt.Println("key: test does not exist")
 	} else if err != nil {
-		panic(err)
+		log.Fatal("unable to get value from redis client:", err)
+		return
 	}
 
 	log.Println("value from redis:", value)
@@ -66,11 +66,13 @@ func dbConn(ctx context.Context, config utils.Config) (*mongo.Client, *redis.Cli
 	mongoclient, err := mongo.Connect(ctx, mongoconn)
 
 	if err != nil {
-		panic(err)
+		log.Fatal("unable to connect to mongodb:", err)
+		return nil, nil
 	}
 
 	if err := mongoclient.Ping(ctx, readpref.Primary()); err != nil {
-		panic(err)
+		log.Fatal("unable to ping mongodb:", err)
+		return nil, nil
 	}
 
 	fmt.Println("MongoDB successfully connected...")
@@ -81,13 +83,17 @@ func dbConn(ctx context.Context, config utils.Config) (*mongo.Client, *redis.Cli
 	})
 
 	if _, err := redisclient.Ping(ctx).Result(); err != nil {
-		panic(err)
+		log.Fatal("unable to ping redis:", err)
+		return nil, nil
+		// panic(err)
 	}
 
 	err = redisclient.Set(ctx, "test", "Welcome to Golang with Redis and MongoDB",
 		0).Err()
 	if err != nil {
-		panic(err)
+		log.Fatal("unable to set value in redis:", err)
+		return nil, nil
+		// panic(err)
 	}
 
 	fmt.Println("Redis client connected successfully...")

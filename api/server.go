@@ -42,33 +42,22 @@ func NewServer(config utils.Config, collections map[string]*mongo.Collection, re
 	tokenController = token.NewJWTToken(&config)
 
 	server := &Server{
-		// 	store:      store,
 		collections: collections,
 		config:      config,
 		redisclient: redisClient,
-		// 	tokenMaker: tokenMaker,
 	}
 
 	gin.SetMode(config.GinMode)
 
 	router := gin.Default()
 
-	// corsConfig := cors.Default()
-	// router.Use(corsConfig)
-
-	// corsConfig := cors.DefaultConfig()
-	// setCorsHeaders(&corsConfig)
-
-	// router.Use(cors.New(corsConfig))
-
 	router.Use(CORS())
 	router.Use(server.rateLimit())
 
-	// do not trust all proxies
-	// router.SetTrustedProxies([]string{"127.0.0.1", "localhost"})
 	router.SetTrustedProxies(nil)
 	router.TrustedPlatform = gin.PlatformCloudflare
 
+	// server.Routes(router)
 	Routes(router, server)
 
 	server.router = router

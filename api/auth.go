@@ -5,6 +5,7 @@ import (
 	// "database/sql"
 	// db "fintrax/db/sqlc"
 
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -98,19 +99,22 @@ func (srv *Server) login(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse("cannot bind user data", err))
 		return
 	}
+
 	dbUser, err := srv.FindUserByEmail(ctx, user.Email)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			ctx.JSON(http.StatusBadRequest, errorResponse("no user record found", err))
+			ctx.JSON(http.StatusNotFound, errorResponse("user not found", err))
 			return
 		}
+
+		log.Fatal("error finding user by email:", err)
 
 		ctx.JSON(http.StatusBadRequest, errorResponse("", err))
 		return
 	}
 
 	if err := utils.VerifyPassword(user.Password, dbUser.Password); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse("invalid password", err))
+		ctx.JSON(http.StatusUnauthorized, errorResponse("invalid password", err))
 		return
 	}
 

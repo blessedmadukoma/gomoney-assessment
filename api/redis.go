@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 )
 
@@ -12,11 +11,11 @@ func (srv *Server) GetDataFromRedis(ctx context.Context, key string, dest interf
 	// val, err := srv.redisclient.Get(ctx, key).Result()
 	val, err := srv.redisclient.Get(ctx, key).Bytes()
 	if err != nil {
-		return "", fmt.Errorf("failed to retreive data from redis: %w", err)
+		return "", err
 	}
 
 	if err := json.Unmarshal(val, dest); err != nil {
-		return "", fmt.Errorf("failed to unmarshal data from JSON: %w", err)
+		return "", err
 	}
 
 	return dest, nil

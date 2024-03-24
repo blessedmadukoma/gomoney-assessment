@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// func (srv *Server) Routes(router *gin.Engine) {
 func Routes(router *gin.Engine, srv *Server) {
 	routes := router.Group("/api")
 	{
