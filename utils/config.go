@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -54,7 +53,7 @@ func LoadEnvConfig(path string) (config Config) {
 	config.Limiter.BURST = rateBurst
 	config.Limiter.ENABLED = rateEnabled
 
-	fmt.Println("Config:", config)
+	// fmt.Println("Config:", config)
 
 	return config
 }

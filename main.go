@@ -6,11 +6,10 @@ import (
 	"log"
 
 	"github.com/blessedmadukoma/gomoney-assessment/api"
+	"github.com/blessedmadukoma/gomoney-assessment/db"
 	"github.com/blessedmadukoma/gomoney-assessment/utils"
 	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 var ()
@@ -62,41 +61,24 @@ func main() {
 
 func dbConn(ctx context.Context, config utils.Config) (*mongo.Client, *redis.Client) {
 	// ? Connect to MongoDB
-	mongoconn := options.Client().ApplyURI(config.MongoDBSource)
-	mongoclient, err := mongo.Connect(ctx, mongoconn)
+	// mongoconn := options.Client().ApplyURI(config.MongoDBSource)
+	// mongoclient, err := mongo.Connect(ctx, mongoconn)
 
-	if err != nil {
-		log.Fatal("unable to connect to mongodb:", err)
-		return nil, nil
-	}
+	// if err != nil {
+	// 	log.Fatal("unable to connect to mongodb:", err)
+	// 	return nil, nil
+	// }
 
-	if err := mongoclient.Ping(ctx, readpref.Primary()); err != nil {
-		log.Fatal("unable to ping mongodb:", err)
-		return nil, nil
-	}
+	// if err := mongoclient.Ping(ctx, readpref.Primary()); err != nil {
+	// 	log.Fatal("unable to ping mongodb:", err)
+	// 	return nil, nil
+	// }
 
-	fmt.Println("MongoDB successfully connected...")
+	// fmt.Println("MongoDB successfully connected...")
 
-	// ? Connect to Redis
-	redisclient := redis.NewClient(&redis.Options{
-		Addr: config.RedisDBSource,
-	})
+	mongoclient, _ := db.ConnectMongoDB(ctx, config)
 
-	if _, err := redisclient.Ping(ctx).Result(); err != nil {
-		log.Fatal("unable to ping redis:", err)
-		return nil, nil
-		// panic(err)
-	}
-
-	err = redisclient.Set(ctx, "test", "Welcome to Golang with Redis and MongoDB",
-		0).Err()
-	if err != nil {
-		log.Fatal("unable to set value in redis:", err)
-		return nil, nil
-		// panic(err)
-	}
-
-	fmt.Println("Redis client connected successfully...")
+	redisclient := db.ConnectRedis(ctx, config)
 
 	return mongoclient, redisclient
 

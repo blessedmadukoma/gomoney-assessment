@@ -29,7 +29,7 @@ func TestLoginE2E(t *testing.T) {
 
 	ctx := context.Background()
 
-	mongoclient, collections := db.MongoConn(ctx, config)
+	mongoclient, collections := db.ConnectMongoDB(ctx, config)
 
 	defer mongoclient.Disconnect(ctx)
 
@@ -109,7 +109,7 @@ func TestLoginE2E(t *testing.T) {
 func TestRegisterEnd2End(t *testing.T) {
 	ctx := context.Background()
 
-	mongoclient, collections := db.MongoConn(ctx, config)
+	mongoclient, collections := db.ConnectMongoDB(ctx, config)
 
 	defer mongoclient.Disconnect(ctx)
 
