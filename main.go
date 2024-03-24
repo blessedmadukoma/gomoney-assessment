@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"log"
 
@@ -17,6 +18,9 @@ var ()
 
 func main() {
 	fmt.Println("Hello from GoMoney Assessment API! Starting Server...")
+
+	seedFlag := flag.Bool("seed", false, "whether to seed the database")
+	flag.Parse()
 
 	config := utils.LoadEnvConfig(".env")
 
@@ -53,8 +57,12 @@ func main() {
 		log.Fatal("cannot create server:", err)
 	}
 
-	// seed database
-	seeds.Execute(config, "UsersSeeder", "TeamsSeeder", "FixturesSeeder")
+	if *seedFlag {
+		fmt.Println("Seeding database...")
+		seeds.Execute(config, "UsersSeeder", "TeamsSeeder", "FixturesSeeder")
+		fmt.Println("Database seeded successfully.")
+		return
+	}
 
 	// err = server.StartServer(config.ServerAddress)
 	err = server.StartServer(config.Port)

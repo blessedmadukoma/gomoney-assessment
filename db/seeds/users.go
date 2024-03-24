@@ -11,8 +11,6 @@ import (
 func (s Seed) UsersSeeder() {
 	ctx := context.Background()
 	for _, user := range data.Users {
-		// meta, _ := json.Marshal(&c.SerializedMeta)
-
 		now := time.Now()
 		user.CreatedAt = now
 		user.UpdatedAt = now
