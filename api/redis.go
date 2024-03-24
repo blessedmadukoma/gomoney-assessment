@@ -12,11 +12,11 @@ func (srv *Server) GetDataFromRedis(ctx context.Context, key string, dest interf
 	// val, err := srv.redisclient.Get(ctx, key).Result()
 	val, err := srv.redisclient.Get(ctx, key).Bytes()
 	if err != nil {
-		return "", fmt.Errorf("failed to retreive my data from redis: %w", err)
+		return "", fmt.Errorf("failed to retreive data from redis: %w", err)
 	}
 
 	if err := json.Unmarshal(val, dest); err != nil {
-		return "", fmt.Errorf("failed to unmarshal my data from JSON: %w", err)
+		return "", fmt.Errorf("failed to unmarshal data from JSON: %w", err)
 	}
 
 	return dest, nil

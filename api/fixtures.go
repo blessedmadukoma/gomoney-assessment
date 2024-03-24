@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -102,6 +103,17 @@ func (srv *Server) createFixture(ctx *gin.Context) {
 }
 
 func (srv *Server) getFixtures(ctx *gin.Context) {
+	var fixtures []db.FixturesParams
+
+	// get data from redis if not expired after 5 minutes: cache hit
+	fixturesData, err := srv.GetDataFromRedis(ctx, "fixtures", &fixtures)
+	if err == nil {
+		ctx.JSON(http.StatusOK, successResponse("fixtures retrieved successfully from redis", fixturesData))
+		return
+	}
+
+	log.Println("Cache Miss - failed to get fixtures data from redis:", err)
+
 	filter := bson.D{}
 
 	cursor, err := srv.collections["fixtures"].Find(ctx, filter)
@@ -110,8 +122,6 @@ func (srv *Server) getFixtures(ctx *gin.Context) {
 		return
 	}
 	defer cursor.Close(ctx)
-
-	var fixtures []db.FixturesParams
 
 	for cursor.Next(ctx) {
 		var fixture db.FixturesParams
@@ -126,16 +136,36 @@ func (srv *Server) getFixtures(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("cursor iteration error", err))
 		return
 	}
+
+	// store the data in redis
+	err = srv.SetDataIntoRedis(ctx, "fixtures", fixtures)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse("failed to set fixtures data to redis", err))
+		return
+	}
+
 	ctx.JSON(http.StatusOK, successResponse("fixtures retrieved successfully", fixtures))
 }
 
 func (srv *Server) getFixtureByLink(ctx *gin.Context) {
+	var fixture db.FixturesParams
+
+	fixtureLink := ctx.Param("id")
+
 	filter := bson.D{
-		{Key: "link", Value: ctx.Param("id")},
+		{Key: "link", Value: fixtureLink},
 	}
 
-	var fixture db.FixturesParams
-	err := srv.collections["fixtures"].FindOne(ctx, filter).Decode(&fixture)
+	// get data from redis if not expired after 5 minutes: cache hit
+	fixtureData, err := srv.GetDataFromRedis(ctx, fmt.Sprintf("fixture-link-%s", fixtureLink), &fixture)
+	if err == nil {
+		ctx.JSON(http.StatusOK, successResponse("fixture by link retrieved successfully from redis", fixtureData))
+		return
+	}
+
+	log.Println("Cache Miss - failed to get fixture-by-link data from redis:", err)
+
+	err = srv.collections["fixtures"].FindOne(ctx, filter).Decode(&fixture)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			ctx.JSON(http.StatusNotFound, errorResponse("fixture not found", err))
@@ -146,10 +176,19 @@ func (srv *Server) getFixtureByLink(ctx *gin.Context) {
 		}
 	}
 
+	// store the data in redis
+	err = srv.SetDataIntoRedis(ctx, fmt.Sprintf("fixture-link-%s", fixtureLink), fixture)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse("failed to set team data to redis", err))
+		return
+	}
+
 	ctx.JSON(http.StatusOK, successResponse("fixture retrieved successfully", fixture))
 }
 
 func (srv *Server) getFixtureByID(ctx *gin.Context) {
+	var fixture db.FixturesParams
+
 	objectID, err := primitive.ObjectIDFromHex(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to verify fixture ID", err))
@@ -160,7 +199,15 @@ func (srv *Server) getFixtureByID(ctx *gin.Context) {
 		{Key: "_id", Value: objectID},
 	}
 
-	var fixture db.FixturesParams
+	// get data from redis if not expired after 5 minutes: cache hit
+	fixtureData, err := srv.GetDataFromRedis(ctx, fmt.Sprintf("team-%s", objectID), &fixture)
+	if err == nil {
+		ctx.JSON(http.StatusOK, successResponse("fixture retrieved successfully from redis", fixtureData))
+		return
+	}
+
+	log.Println("Cache Miss - failed to get fixture data from redis:", err)
+
 	err = srv.collections["fixtures"].FindOne(ctx, filter).Decode(&fixture)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -170,6 +217,13 @@ func (srv *Server) getFixtureByID(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, errorResponse("error retrieving fixture", err))
 			return
 		}
+	}
+
+	// store the data in redis
+	err = srv.SetDataIntoRedis(ctx, fmt.Sprintf("fixture-%s", objectID), fixture)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse("failed to set fixture data to redis", err))
+		return
 	}
 
 	ctx.JSON(http.StatusOK, successResponse("fixture retrieved successfully", fixture))
@@ -246,68 +300,3 @@ func (srv *Server) removeFixture(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, successResponse("fixture deleted successfully", nil))
 }
-
-// func (srv *Server) searchFixtures(ctx *gin.Context) {
-// 	// Example of API endpoint: <<BASE_URL>>/api/fixtures/search?q=che -> to get `che`lsea or man`che`ster united
-
-// 	// Note: you can search by fixture name, shortname or object ID i.e. ID
-
-// 	searchQuery := ctx.Query("q")
-
-// 	var filter primitive.M
-
-// 	fixtureID, err := primitive.ObjectIDFromHex(searchQuery)
-// 	if err != nil {
-// 		// seach by fixture or short name
-// 		filter = bson.M{
-// 			"$or": []bson.M{
-// 				{"fixturename": primitive.Regex{Pattern: searchQuery, Options: "i"}},
-// 				{"shortname": primitive.Regex{Pattern: searchQuery, Options: "i"}},
-// 			},
-// 		}
-// 	} else {
-// 		// search by Object ID
-// 		filter = bson.M{"_id": fixtureID}
-// 	}
-
-// 	cursor, err := srv.collections["fixtures"].Find(ctx, filter)
-// 	if err != nil {
-// 		ctx.JSON(http.StatusInternalServerError, errorResponse("Error searching for fixtures", err))
-// 		return
-// 	}
-// 	defer cursor.Close(ctx)
-
-// 	var fixtures []db.FixturesParams
-// 	if err := cursor.All(ctx, &fixtures); err != nil {
-// 		ctx.JSON(http.StatusInternalServerError, errorResponse("Error retrieving fixtures", err))
-// 		return
-// 	}
-
-// 	ctx.JSON(http.StatusOK, successResponse("Fixtures retrieved successfully", fixtures))
-// }
-
-// func (srv *Server) getFixture(ctx *gin.Context) {
-// 	objectID, err := primitive.ObjectIDFromHex(ctx.Param("id"))
-// 	if err != nil {
-// 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to verify fixture ID", err))
-// 		return
-// 	}
-
-// 	filter := bson.D{
-// 		{Key: "_id", Value: objectID},
-// 	}
-
-// 	var fixture db.FixturesParams
-// 	err = srv.collections["fixtures"].FindOne(ctx, filter).Decode(&fixture)
-// 	if err != nil {
-// 		if err == mongo.ErrNoDocuments {
-// 			ctx.JSON(http.StatusNotFound, errorResponse("Fixture not found", err))
-// 			return
-// 		} else {
-// 			ctx.JSON(http.StatusInternalServerError, errorResponse("error retrieving fixture", err))
-// 			return
-// 		}
-// 	}
-
-// 	ctx.JSON(http.StatusOK, successResponse("fixture retrieved successfully", fixture))
-// }
