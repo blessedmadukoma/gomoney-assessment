@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/blessedmadukoma/gomoney-assessment/db"
+	models "github.com/blessedmadukoma/gomoney-assessment/db/models"
 	"github.com/blessedmadukoma/gomoney-assessment/utils"
 	"github.com/go-redis/redis/v8"
 	"github.com/stretchr/testify/assert"
@@ -186,4 +187,97 @@ func TestRegisterEnd2End(t *testing.T) {
 			}
 		})
 	}
+}
+
+func (srv *Server) obtainFanAuthToken(t *testing.T, ts *httptest.Server) string {
+	user, password := randomFanUser(t)
+
+	res, err := srv.collections["users"].InsertOne(context.Background(), &user)
+	if err != nil {
+		t.Fatal("error inserting into db:", err)
+	}
+
+	var newUser *models.UserParams
+	query := bson.M{"_id": res.InsertedID}
+	err = srv.collections["users"].FindOne(context.Background(), query).Decode(&newUser)
+	if err != nil {
+		t.Fatal("error retreiving record:", err)
+	}
+
+	loginRequest := map[string]interface{}{
+		"email":    user.Email,
+		"password": password,
+	}
+
+	loginRequestBody, err := json.Marshal(&loginRequest)
+	if err != nil {
+		t.Fatal("error marshalling user json:", err)
+	}
+
+	req, err := http.Post(ts.URL+"/api/auth/login", "application/json", bytes.NewReader(loginRequestBody))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer req.Body.Close()
+
+	var responseBody map[string]interface{}
+	err = json.NewDecoder(req.Body).Decode(&responseBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	accessToken, ok := responseBody["data"].(map[string]interface{})["access_token"].(string)
+	if !ok {
+		log.Fatal("failed to retrieve access token")
+		return ""
+	}
+
+	return accessToken
+
+}
+func (srv *Server) obtainAdminAuthToken(t *testing.T, ts *httptest.Server) string {
+	user, password := randomAdminUser(t)
+
+	res, err := srv.collections["users"].InsertOne(context.Background(), &user)
+	if err != nil {
+		t.Fatal("error inserting into db:", err)
+	}
+
+	var newUser *models.UserParams
+	query := bson.M{"_id": res.InsertedID}
+	err = srv.collections["users"].FindOne(context.Background(), query).Decode(&newUser)
+	if err != nil {
+		t.Fatal("error retreiving record:", err)
+	}
+
+	loginRequest := map[string]interface{}{
+		"email":    user.Email,
+		"password": password,
+	}
+
+	loginRequestBody, err := json.Marshal(&loginRequest)
+	if err != nil {
+		t.Fatal("error marshalling user json:", err)
+	}
+
+	req, err := http.Post(ts.URL+"/api/auth/login", "application/json", bytes.NewReader(loginRequestBody))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer req.Body.Close()
+
+	var responseBody map[string]interface{}
+	err = json.NewDecoder(req.Body).Decode(&responseBody)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	accessToken, ok := responseBody["data"].(map[string]interface{})["access_token"].(string)
+	if !ok {
+		log.Fatal("failed to retrieve access token")
+		return ""
+	}
+
+	return accessToken
+
 }

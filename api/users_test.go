@@ -21,3 +21,32 @@ func randomUser(t *testing.T) (user db.UserParams, password string) {
 	}
 	return
 }
+
+func randomFanUser(t *testing.T) (user db.RegisterParams, password string) {
+	password = utils.RandomString(8)
+	hashedPassword, err := utils.HashPassword(password)
+	require.NoError(t, err)
+
+	user = db.RegisterParams{
+		FirstName: utils.RandomName(),
+		LastName:  utils.RandomName(),
+		Email:     utils.RandomEmail(),
+		Password:  hashedPassword,
+	}
+	return
+}
+
+func randomAdminUser(t *testing.T) (user db.RegisterParams, password string) {
+	password = utils.RandomString(8)
+	hashedPassword, err := utils.HashPassword(password)
+	require.NoError(t, err)
+
+	user = db.RegisterParams{
+		FirstName: utils.RandomName(),
+		LastName:  utils.RandomName(),
+		Email:     utils.RandomEmail(),
+		Role:      "admin",
+		Password:  hashedPassword,
+	}
+	return
+}
