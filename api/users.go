@@ -34,9 +34,6 @@ func (srv *Server) FindUserByEmail(ctx context.Context, email string) (*db.UserP
 	query := bson.M{"email": strings.ToLower(email)}
 	err := srv.collections["users"].FindOne(ctx, query).Decode(&user)
 	if err != nil {
-		// if err == mongo.ErrNoDocuments {
-		// 	return nil, fmt.Errorf("user with email %s not found", email)
-		// }
 		return nil, err
 	}
 

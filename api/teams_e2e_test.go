@@ -151,7 +151,6 @@ func TestGetTeamByID(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
-	// Decode the response body
 	var responseBody map[string]interface{}
 	err = json.NewDecoder(res.Body).Decode(&responseBody)
 	if err != nil {
@@ -202,7 +201,6 @@ func TestRemoveTeam(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
-	// Decode the response body
 	var responseBody map[string]interface{}
 	err = json.NewDecoder(res.Body).Decode(&responseBody)
 	if err != nil {

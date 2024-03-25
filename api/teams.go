@@ -17,7 +17,6 @@ func (srv *Server) teamExists(ctx *gin.Context, teamName string) bool {
 	filter := bson.M{"teamname": teamName}
 	count, err := srv.collections["teams"].CountDocuments(ctx, filter)
 	if err != nil {
-		// Log the error or handle it as needed
 		return false
 	}
 	return count > 0
@@ -89,10 +88,8 @@ func (srv *Server) createTeam(ctx *gin.Context) {
 
 func (srv *Server) getTeams(ctx *gin.Context) {
 	var teams []db.TeamsParams
-	// Define a filter to match all documents
 	filter := bson.D{}
 
-	// get data from redis if not expired after 5 minutes: cache hit
 	teamsRedisData, err := srv.GetDataFromRedis(ctx, "teams", &teams)
 	if err == nil {
 		ctx.JSON(http.StatusOK, successResponse("teams retrieved successfully from redis", teamsRedisData))
@@ -101,8 +98,6 @@ func (srv *Server) getTeams(ctx *gin.Context) {
 
 	log.Println("Cache Miss - failed to get data from redis:", err)
 
-	// if not, get from mongodb
-
 	// Find all teams from mongodb: cache miss
 	cursor, err := srv.collections["teams"].Find(ctx, filter)
 	if err != nil {
@@ -110,9 +105,6 @@ func (srv *Server) getTeams(ctx *gin.Context) {
 		return
 	}
 	defer cursor.Close(ctx)
-
-	// Iterate over the cursor and decode each document into a Team struct
-	// var teams []db.TeamsParams
 
 	for cursor.Next(ctx) {
 		var team db.TeamsParams
@@ -123,7 +115,6 @@ func (srv *Server) getTeams(ctx *gin.Context) {
 		teams = append(teams, team)
 	}
 
-	// Check for errors during cursor iteration
 	if err := cursor.Err(); err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("cursor iteration error", err))
 		return
@@ -191,7 +182,6 @@ func (srv *Server) getTeam(ctx *gin.Context) {
 		{Key: "_id", Value: objectID},
 	}
 
-	// get data from redis if not expired after 5 minutes: cache hit
 	teamData, err := srv.GetDataFromRedis(ctx, fmt.Sprintf("team-%s", objectID), &team)
 	if err == nil {
 		ctx.JSON(http.StatusOK, successResponse("team retrieved successfully from redis", teamData))
@@ -264,7 +254,6 @@ func (srv *Server) editTeam(ctx *gin.Context) {
 		"team": db.ToTeamsResponse(updatedTeam),
 	}
 
-	// Return success response
 	ctx.JSON(http.StatusOK, successResponse("team updated successfully", data))
 }
 

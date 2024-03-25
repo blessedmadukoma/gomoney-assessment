@@ -22,16 +22,6 @@ func (srv *Server) Routes(router *gin.Engine) {
 			authRoute.POST("/logout", srv.logout)
 		}
 
-		// // user routes: update user profile, delete user profile
-		// userRoute := routes.Group("/user").Use(authMiddleware())
-		// {
-		// 	// userRoute.PATCH("/:id", isAdminMiddleware(srv.collections), srv.CreateUser)
-		// 	userRoute.GET("/", isAdminMiddleware(srv.collections), srv.GetUsers)
-		// 	userRoute.GET("/:id", isAdminMiddleware(srv.collections), srv.GetUserByID)
-		// 	// userRoute.GET("/:email", isAdminMiddleware(srv.collections), srv.GetUserByEmail)
-		// 	// userRoute.DELETE("/:id", isAdminMiddleware(srv.collections), srv.DeleteUser)
-		// }
-
 		// teams routes
 		teamsRoute := routes.Group("/teams").Use(authMiddleware())
 		{

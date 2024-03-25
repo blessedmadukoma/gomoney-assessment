@@ -16,18 +16,11 @@ import (
 
 var tokenController *token.JWTToken
 
-// var mongoCollection *mongo.Collection
-
-// Server struct serves HTTP requests for our banking service
 type Server struct {
 	config      utils.Config
 	collections map[string]*mongo.Collection
 	redisclient *redis.Client
-
-	// collection *mongo.Collection
-
-	// store      *db.Store
-	router *gin.Engine
+	router      *gin.Engine
 }
 
 func healthy(ctx *gin.Context) {
@@ -36,7 +29,6 @@ func healthy(ctx *gin.Context) {
 }
 
 // NewServer creates a new HTTP server and setup routing
-// func NewServer(config utils.Config, store *db.Store) (*Server, error) {
 func NewServer(config utils.Config, collections map[string]*mongo.Collection, redisClient *redis.Client) (*Server, error) {
 
 	tokenController = token.NewJWTToken(&config)
@@ -58,7 +50,6 @@ func NewServer(config utils.Config, collections map[string]*mongo.Collection, re
 	router.TrustedPlatform = gin.PlatformCloudflare
 
 	server.Routes(router)
-	// Routes(router, server)
 
 	server.router = router
 
