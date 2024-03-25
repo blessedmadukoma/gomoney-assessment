@@ -15,22 +15,17 @@ import (
 )
 
 func (srv *Server) createTestTeamsData(t *testing.T, ts *httptest.Server) *http.Response {
-	// ctx := context.Background()
-
 	token := srv.obtainAdminAuthToken(t, ts)
 
 	teamName := utils.RandomName()
 
-	// Sample team data for testing
 	teamData := map[string]interface{}{
 		"teamName":  teamName,
 		"shortName": teamName[:3],
 	}
 
-	// Convert team data to JSON
 	payload, _ := json.Marshal(teamData)
 
-	// Send POST request to the create-team endpoint
 	req, err := http.NewRequest("POST", ts.URL+"/api/teams", bytes.NewBuffer(payload))
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Content-Type", "application/json")
@@ -102,7 +97,6 @@ func TestGetTeams(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
-	// Decode the response body
 	var responseBody map[string]interface{}
 	err = json.NewDecoder(res.Body).Decode(&responseBody)
 	if err != nil {
