@@ -43,7 +43,7 @@ func (j *JWTToken) CreateToken(user_id primitive.ObjectID, duration time.Duratio
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	tokenString, err := token.SignedString([]byte(j.config.TokenSymmetricKey))
-	// tokenString, err := token.SignedString([]byte(j.config.TokenSymmetricKey))
+
 	if err != nil {
 		log.Println("Error signing string:", tokenString)
 		return "", err

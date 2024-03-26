@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -132,11 +131,7 @@ func TestGetTeamByID(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	log.Println("teamResponseBody:", teamResponseBody)
-
 	teamID := teamResponseBody["data"].(map[string]interface{})["team"].(map[string]interface{})["id"].(string)
-
-	log.Println("teamID:", teamID)
 
 	req, err := http.NewRequest("GET", ts.URL+"/api/teams/"+teamID, nil)
 	req.Header.Set("Authorization", "Bearer "+token)

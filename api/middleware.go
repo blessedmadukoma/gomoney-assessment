@@ -31,13 +31,10 @@ func isAdminMiddleware(collections map[string]*mongo.Collection) gin.HandlerFunc
 
 		// check users table to see if the userId has a role of admin
 		var user struct {
-			// FirstName string `bson"firstname"`
 			Role string `bson:"role"`
 		}
 
 		err := collections["users"].FindOne(ctx, bson.M{"_id": userId}).Decode(&user)
-
-		// log.Println("userId:", userId, "user role:", user.Role, "first name:", user.FirstName)
 
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse("failed to check user role", err))
@@ -69,8 +66,6 @@ func authMiddleware() gin.HandlerFunc {
 // getAuthorizationPayload retrieves the authorization payload from the context
 func getAuthorizationPayload(ctx *gin.Context) primitive.ObjectID {
 	token := ctx.GetHeader("Authorization")
-
-	log.Println("token:", token)
 
 	if token == "" {
 		ctx.JSON(http.StatusUnauthorized, errorResponse("unauthorized request", nil))

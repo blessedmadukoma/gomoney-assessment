@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -210,11 +209,7 @@ func TestGetFixtureByID(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	log.Println("fixtureResponseBody:", fixtureResponseBody)
-
 	fixtureID := fixtureResponseBody["data"].(map[string]interface{})["fixture"].(map[string]interface{})["id"].(string)
-
-	log.Println("fixtureID:", fixtureID)
 
 	req, err := http.NewRequest("GET", ts.URL+"/api/fixtures/"+fixtureID, nil)
 	req.Header.Set("Authorization", "Bearer "+token)
