@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	// db "trackit/db/sqlc"
-
 	"github.com/blessedmadukoma/gomoney-assessment/token"
 	"github.com/blessedmadukoma/gomoney-assessment/utils"
 	"github.com/go-redis/redis/v8"
@@ -17,10 +15,10 @@ import (
 var tokenController *token.JWTToken
 
 type Server struct {
-	config      utils.Config
-	collections map[string]*mongo.Collection
+	Config      utils.Config
+	Collections map[string]*mongo.Collection
 	redisclient *redis.Client
-	router      *gin.Engine
+	Router      *gin.Engine
 }
 
 func healthy(ctx *gin.Context) {
@@ -34,8 +32,8 @@ func NewServer(config utils.Config, collections map[string]*mongo.Collection, re
 	tokenController = token.NewJWTToken(&config)
 
 	server := &Server{
-		collections: collections,
-		config:      config,
+		Collections: collections,
+		Config:      config,
 		redisclient: redisClient,
 	}
 
@@ -51,7 +49,7 @@ func NewServer(config utils.Config, collections map[string]*mongo.Collection, re
 
 	server.Routes(router)
 
-	server.router = router
+	server.Router = router
 
 	return server, nil
 }
@@ -59,5 +57,5 @@ func NewServer(config utils.Config, collections map[string]*mongo.Collection, re
 // StartServer runs the HTTP server on a specific address
 func (srv *Server) StartServer(address string) error {
 	fmt.Printf("Server starting on address: %s\n", address)
-	return srv.router.Run(fmt.Sprintf(":%s", address))
+	return srv.Router.Run(fmt.Sprintf(":%s", address))
 }

@@ -31,7 +31,7 @@ type Config struct {
 func LoadEnvConfig(path string) (config Config) {
 	err := godotenv.Load(path)
 	if err != nil {
-		log.Fatal("Cannot load env:", err)
+		log.Fatal("Cannot load env: ", err)
 	}
 
 	config.GinMode = os.Getenv("GIN_MODE")

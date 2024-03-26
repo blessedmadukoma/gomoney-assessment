@@ -48,7 +48,7 @@ func (srv *Server) register(ctx *gin.Context) {
 
 	user.Password = hashedPassword
 
-	res, err := srv.collections["users"].InsertOne(ctx, &user)
+	res, err := srv.Collections["users"].InsertOne(ctx, &user)
 
 	if err != nil {
 
@@ -66,14 +66,14 @@ func (srv *Server) register(ctx *gin.Context) {
 	opt.SetUnique(true)
 	index := mongo.IndexModel{Keys: bson.M{"email": 1}, Options: opt}
 
-	if _, err := srv.collections["users"].Indexes().CreateOne(ctx, index); err != nil {
+	if _, err := srv.Collections["users"].Indexes().CreateOne(ctx, index); err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("could not create index for email", err))
 	}
 
 	var newUser *db.UserParams
 	query := bson.M{"_id": res.InsertedID}
 
-	err = srv.collections["users"].FindOne(ctx, query).Decode(&newUser)
+	err = srv.Collections["users"].FindOne(ctx, query).Decode(&newUser)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse("unable to find newly created user", err))
 		return
@@ -116,13 +116,13 @@ func (srv *Server) login(ctx *gin.Context) {
 	}
 
 	// Generate Tokens
-	access_token, err := tokenController.CreateToken(dbUser.ID, srv.config.AccessTokenDuration)
+	access_token, err := tokenController.CreateToken(dbUser.ID, srv.Config.AccessTokenDuration)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse("failed to create access token", err))
 		return
 	}
 
-	refresh_token, err := tokenController.CreateToken(dbUser.ID, srv.config.RefreshTokenDuration)
+	refresh_token, err := tokenController.CreateToken(dbUser.ID, srv.Config.RefreshTokenDuration)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse("could not create refresh token", err))
 		return

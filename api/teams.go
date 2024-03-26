@@ -15,7 +15,7 @@ import (
 
 func (srv *Server) teamExists(ctx *gin.Context, teamName string) bool {
 	filter := bson.M{"teamname": teamName}
-	count, err := srv.collections["teams"].CountDocuments(ctx, filter)
+	count, err := srv.Collections["teams"].CountDocuments(ctx, filter)
 	if err != nil {
 		return false
 	}
@@ -25,7 +25,7 @@ func (srv *Server) teamExists(ctx *gin.Context, teamName string) bool {
 func (srv *Server) getShortName(ctx *gin.Context, teamName string) string {
 	var teamInfo db.TeamsParams
 	filter := bson.M{"teamname": teamName}
-	err := srv.collections["teams"].FindOne(ctx, filter).Decode(&teamInfo)
+	err := srv.Collections["teams"].FindOne(ctx, filter).Decode(&teamInfo)
 	if err != nil {
 		ctx.JSON(http.StatusNotFound, errorResponse("failed to find team", err))
 	}
@@ -48,7 +48,7 @@ func (srv *Server) createTeam(ctx *gin.Context) {
 		{Key: "teamname", Value: teamsParams.TeamName},
 		{Key: "shortname", Value: teamsParams.ShortName},
 	}
-	count, err := srv.collections["teams"].CountDocuments(ctx, filter)
+	count, err := srv.Collections["teams"].CountDocuments(ctx, filter)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to count records", err))
 		return
@@ -58,7 +58,7 @@ func (srv *Server) createTeam(ctx *gin.Context) {
 		return
 	}
 
-	res, err := srv.collections["teams"].InsertOne(ctx, teamsParams)
+	res, err := srv.Collections["teams"].InsertOne(ctx, teamsParams)
 	if err != nil {
 		if er, ok := err.(mongo.WriteException); ok && er.WriteErrors[0].Code == 11000 {
 			ctx.JSON(http.StatusBadRequest, errorResponse("team already exists", er))
@@ -72,7 +72,7 @@ func (srv *Server) createTeam(ctx *gin.Context) {
 	var newTeam *db.TeamsParams
 	query := bson.M{"_id": res.InsertedID}
 
-	err = srv.collections["teams"].FindOne(ctx, query).Decode(&newTeam)
+	err = srv.Collections["teams"].FindOne(ctx, query).Decode(&newTeam)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse("unable to find newly created user", err))
 		return
@@ -99,7 +99,7 @@ func (srv *Server) getTeams(ctx *gin.Context) {
 	log.Println("Cache Miss - failed to get data from redis:", err)
 
 	// Find all teams from mongodb: cache miss
-	cursor, err := srv.collections["teams"].Find(ctx, filter)
+	cursor, err := srv.Collections["teams"].Find(ctx, filter)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to find teams", err))
 		return
@@ -153,7 +153,7 @@ func (srv *Server) searchTeams(ctx *gin.Context) {
 		filter = bson.M{"_id": teamID}
 	}
 
-	cursor, err := srv.collections["teams"].Find(ctx, filter)
+	cursor, err := srv.Collections["teams"].Find(ctx, filter)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("Error searching for teams", err))
 		return
@@ -190,7 +190,7 @@ func (srv *Server) getTeam(ctx *gin.Context) {
 
 	log.Println("Cache Miss - failed to get team data from redis:", err)
 
-	err = srv.collections["teams"].FindOne(ctx, filter).Decode(&team)
+	err = srv.Collections["teams"].FindOne(ctx, filter).Decode(&team)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			ctx.JSON(http.StatusNotFound, errorResponse("Team not found", err))
@@ -230,7 +230,7 @@ func (srv *Server) editTeam(ctx *gin.Context) {
 
 	update := bson.M{"$set": payload}
 
-	result, err := srv.collections["teams"].UpdateOne(ctx, filter, update)
+	result, err := srv.Collections["teams"].UpdateOne(ctx, filter, update)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("error updating team", err))
 		return
@@ -244,7 +244,7 @@ func (srv *Server) editTeam(ctx *gin.Context) {
 	var updatedTeam *db.TeamsParams
 	query := bson.M{"_id": objectID}
 
-	err = srv.collections["teams"].FindOne(ctx, query).Decode(&updatedTeam)
+	err = srv.Collections["teams"].FindOne(ctx, query).Decode(&updatedTeam)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse("failed to find updated team", err))
 		return
@@ -268,7 +268,7 @@ func (srv *Server) removeTeam(ctx *gin.Context) {
 
 	filter := bson.M{"_id": objectID}
 
-	result, err := srv.collections["teams"].DeleteOne(ctx, filter)
+	result, err := srv.Collections["teams"].DeleteOne(ctx, filter)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to delete team", err))
 		return

@@ -20,7 +20,7 @@ import (
 
 var (
 	envConfig   = utils.LoadEnvConfig("../.env")
-	collections = make(map[string]*mongo.Collection)
+	Collections = make(map[string]*mongo.Collection)
 	redisclient = redis.NewClient(&redis.Options{
 		Addr: config.RedisDBSource,
 	})
@@ -30,18 +30,18 @@ func TestLoginE2E(t *testing.T) {
 
 	ctx := context.Background()
 
-	mongoclient, collections := db.ConnectMongoDB(ctx, config)
+	mongoclient, Collections := db.ConnectMongoDB(ctx, config)
 
 	defer mongoclient.Disconnect(ctx)
 
-	assert.NotNil(t, collections)
+	assert.NotNil(t, Collections)
 
-	srv, err := NewServer(config, collections, redisclient)
+	srv, err := NewServer(config, Collections, redisclient)
 
 	assert.NoError(t, err, "unable to create new server")
 
 	user, password := randomUser(t)
-	_, err = collections["users"].InsertOne(ctx, user)
+	_, err = Collections["users"].InsertOne(ctx, user)
 	assert.NoError(t, err)
 
 	testCases := []struct {
@@ -95,7 +95,7 @@ func TestLoginE2E(t *testing.T) {
 			req.Header.Set("Content-Type", "application/json")
 
 			recorder := httptest.NewRecorder()
-			srv.router.ServeHTTP(recorder, req)
+			srv.Router.ServeHTTP(recorder, req)
 
 			assert.Equal(t, tc.expected, recorder.Code)
 		})
@@ -103,18 +103,18 @@ func TestLoginE2E(t *testing.T) {
 
 	filter := bson.M{"_id": user.ID}
 
-	_, err = srv.collections["users"].DeleteOne(ctx, filter)
+	_, err = srv.Collections["users"].DeleteOne(ctx, filter)
 	assert.NoError(t, err)
 }
 
 func TestRegisterEnd2End(t *testing.T) {
 	ctx := context.Background()
 
-	mongoclient, collections := db.ConnectMongoDB(ctx, config)
+	mongoclient, Collections := db.ConnectMongoDB(ctx, config)
 
 	defer mongoclient.Disconnect(ctx)
 
-	assert.NotNil(t, collections)
+	assert.NotNil(t, Collections)
 
 	type testCase struct {
 		name           string
@@ -123,7 +123,7 @@ func TestRegisterEnd2End(t *testing.T) {
 		expectedBody   string
 	}
 
-	server, err := NewServer(envConfig, collections, redisclient)
+	server, err := NewServer(envConfig, Collections, redisclient)
 	if err != nil {
 		log.Fatal("failed to connect to server", err)
 	}
@@ -176,7 +176,7 @@ func TestRegisterEnd2End(t *testing.T) {
 			recorder := httptest.NewRecorder()
 
 			// Serve the request
-			server.router.ServeHTTP(recorder, req)
+			server.Router.ServeHTTP(recorder, req)
 
 			// Check the response status code
 			assert.Equal(t, tc.expectedStatus, recorder.Code)
@@ -192,14 +192,14 @@ func TestRegisterEnd2End(t *testing.T) {
 func (srv *Server) obtainFanAuthToken(t *testing.T, ts *httptest.Server) string {
 	user, password := randomFanUser(t)
 
-	res, err := srv.collections["users"].InsertOne(context.Background(), &user)
+	res, err := srv.Collections["users"].InsertOne(context.Background(), &user)
 	if err != nil {
 		t.Fatal("error inserting into db:", err)
 	}
 
 	var newUser *models.UserParams
 	query := bson.M{"_id": res.InsertedID}
-	err = srv.collections["users"].FindOne(context.Background(), query).Decode(&newUser)
+	err = srv.Collections["users"].FindOne(context.Background(), query).Decode(&newUser)
 	if err != nil {
 		t.Fatal("error retreiving record:", err)
 	}
@@ -238,14 +238,14 @@ func (srv *Server) obtainFanAuthToken(t *testing.T, ts *httptest.Server) string 
 func (srv *Server) obtainAdminAuthToken(t *testing.T, ts *httptest.Server) string {
 	user, password := randomAdminUser(t)
 
-	res, err := srv.collections["users"].InsertOne(context.Background(), &user)
+	res, err := srv.Collections["users"].InsertOne(context.Background(), &user)
 	if err != nil {
 		t.Fatal("error inserting into db:", err)
 	}
 
 	var newUser *models.UserParams
 	query := bson.M{"_id": res.InsertedID}
-	err = srv.collections["users"].FindOne(context.Background(), query).Decode(&newUser)
+	err = srv.Collections["users"].FindOne(context.Background(), query).Decode(&newUser)
 	if err != nil {
 		t.Fatal("error retreiving record:", err)
 	}

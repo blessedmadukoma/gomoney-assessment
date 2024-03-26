@@ -51,7 +51,7 @@ func TestCreateTeamsE2E(t *testing.T) {
 	srv, err := NewServer(config, collections, redisclient)
 	assert.NoError(t, err)
 
-	ts := httptest.NewServer(srv.router)
+	ts := httptest.NewServer(srv.Router)
 	defer ts.Close()
 
 	res := srv.createTestTeamsData(t, ts)
@@ -79,7 +79,7 @@ func TestGetTeams(t *testing.T) {
 	srv, err := NewServer(config, collections, redisclient)
 	assert.NoError(t, err)
 
-	ts := httptest.NewServer(srv.router)
+	ts := httptest.NewServer(srv.Router)
 	defer ts.Close()
 
 	token := srv.obtainFanAuthToken(t, ts)
@@ -116,7 +116,7 @@ func TestGetTeamByID(t *testing.T) {
 	srv, err := NewServer(config, collections, redisclient)
 	assert.NoError(t, err)
 
-	ts := httptest.NewServer(srv.router)
+	ts := httptest.NewServer(srv.Router)
 	defer ts.Close()
 
 	token := srv.obtainFanAuthToken(t, ts)
@@ -170,7 +170,7 @@ func TestRemoveTeam(t *testing.T) {
 	srv, err := NewServer(config, collections, redisclient)
 	assert.NoError(t, err)
 
-	ts := httptest.NewServer(srv.router)
+	ts := httptest.NewServer(srv.Router)
 	defer ts.Close()
 
 	token := srv.obtainAdminAuthToken(t, ts)

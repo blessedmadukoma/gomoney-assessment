@@ -8,7 +8,6 @@ import (
 
 func (srv *Server) GetDataFromRedis(ctx context.Context, key string, dest interface{}) (interface{}, error) {
 
-	// val, err := srv.redisclient.Get(ctx, key).Result()
 	val, err := srv.redisclient.Get(ctx, key).Bytes()
 	if err != nil {
 		return "", err
@@ -28,7 +27,7 @@ func (srv *Server) SetDataIntoRedis(ctx context.Context, key string, value any) 
 	}
 
 	// Set JSON value into Redis
-	err = srv.redisclient.Set(ctx, key, jsonValue, 5*time.Minute).Err()
+	err = srv.redisclient.Set(ctx, key, jsonValue, 3*time.Minute).Err() // expire eery 3 minutes
 	if err != nil {
 		return err
 	}

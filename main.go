@@ -17,7 +17,7 @@ import (
 var ()
 
 func main() {
-	fmt.Println("Hello from GoMoney Assessment API! Starting Server...")
+	fmt.Println("Hello from GoMoney Assessment API!")
 
 	seedFlag := flag.Bool("seed", false, "whether to seed the database")
 	flag.Parse()

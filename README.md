@@ -17,7 +17,6 @@ The project is hosted on [here](https://gomoney-league-blessedmadukoma.koyeb.app
   - View teams.
   - View completed fixtures.
   - View pending fixtures.
-  - Robust search for fixtures and teams.
 
 - **Public Access:**
   - The search API for teams
@@ -146,4 +145,3 @@ The project is hosted on [here](https://gomoney-league-blessedmadukoma.koyeb.app
 
 - **Search:**
   - `GET /api/teams/search?q=query_string`
-  - `GET /api/fixtures/search?q=query_string`

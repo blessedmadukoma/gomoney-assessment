@@ -16,7 +16,7 @@ func (srv *Server) FindUserById(ctx context.Context, id string) (*db.UserParams,
 	var user *db.UserParams
 
 	query := bson.M{"_id": oid}
-	err := srv.collections["users"].FindOne(ctx, query).Decode(&user)
+	err := srv.Collections["users"].FindOne(ctx, query).Decode(&user)
 
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -32,7 +32,7 @@ func (srv *Server) FindUserByEmail(ctx context.Context, email string) (*db.UserP
 	var user db.UserParams
 
 	query := bson.M{"email": strings.ToLower(email)}
-	err := srv.collections["users"].FindOne(ctx, query).Decode(&user)
+	err := srv.Collections["users"].FindOne(ctx, query).Decode(&user)
 	if err != nil {
 		return nil, err
 	}

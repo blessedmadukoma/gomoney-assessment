@@ -5,13 +5,11 @@ import (
 	"testing"
 	"time"
 
-	// db "trackit/db/sqlc"
 	"github.com/blessedmadukoma/gomoney-assessment/utils"
 	"github.com/go-redis/redis/v8"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/gin-gonic/gin"
-	// _ "github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 )
 

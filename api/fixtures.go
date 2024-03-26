@@ -15,11 +15,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func (srv *Server) generateFixture(ctx *gin.Context, home, away string) string {
+func (srv *Server) GenerateFixture(ctx *gin.Context, home, away string) string {
 	return fmt.Sprintf("%s-vs-%s", strings.ToLower(srv.getShortName(ctx, home)), strings.ToLower(srv.getShortName(ctx, away)))
 }
 
-func (srv *Server) generateFixtureLink(ctx *gin.Context, home, away string) string {
+func (srv *Server) GenerateFixtureLink(ctx *gin.Context, home, away string) string {
 	shortUUID := xid.New().String()
 	return fmt.Sprintf("%s-vs-%s-%s", strings.ToLower(srv.getShortName(ctx, home)), strings.ToLower(srv.getShortName(ctx, away)), shortUUID)
 }
@@ -48,9 +48,9 @@ func (srv *Server) createFixture(ctx *gin.Context) {
 	}
 
 	// Generate fixture and link
-	createParams.Link = srv.generateFixtureLink(ctx, createParams.Home, createParams.Away)
+	createParams.Link = srv.GenerateFixtureLink(ctx, createParams.Home, createParams.Away)
 
-	createParams.Fixture = srv.generateFixture(ctx, createParams.Home, createParams.Away)
+	createParams.Fixture = srv.GenerateFixture(ctx, createParams.Home, createParams.Away)
 
 	if createParams.Status == "" {
 		createParams.Status = "pending"
@@ -67,7 +67,7 @@ func (srv *Server) createFixture(ctx *gin.Context) {
 		"status":  createParams.Status,
 		"fixture": createParams.Fixture,
 	}
-	count, err := srv.collections["fixtures"].CountDocuments(ctx, filter)
+	count, err := srv.Collections["fixtures"].CountDocuments(ctx, filter)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to count fixture records", err))
 		return
@@ -78,7 +78,7 @@ func (srv *Server) createFixture(ctx *gin.Context) {
 	}
 
 	// Insert the fixture into the database
-	res, err := srv.collections["fixtures"].InsertOne(ctx, createParams)
+	res, err := srv.Collections["fixtures"].InsertOne(ctx, createParams)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to create fixture", err))
 		return
@@ -86,7 +86,7 @@ func (srv *Server) createFixture(ctx *gin.Context) {
 
 	// Fetch the newly created fixture
 	var newFixture db.FixturesParams
-	err = srv.collections["fixtures"].FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&newFixture)
+	err = srv.Collections["fixtures"].FindOne(ctx, bson.M{"_id": res.InsertedID}).Decode(&newFixture)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to retrieve newly created fixture", err))
 		return
@@ -114,7 +114,7 @@ func (srv *Server) getFixtures(ctx *gin.Context) {
 
 	filter := bson.D{}
 
-	cursor, err := srv.collections["fixtures"].Find(ctx, filter)
+	cursor, err := srv.Collections["fixtures"].Find(ctx, filter)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to find all fixtures", err))
 		return
@@ -163,7 +163,7 @@ func (srv *Server) getFixtureByLink(ctx *gin.Context) {
 
 	log.Println("Cache Miss - failed to get fixture-by-link data from redis:", err)
 
-	err = srv.collections["fixtures"].FindOne(ctx, filter).Decode(&fixture)
+	err = srv.Collections["fixtures"].FindOne(ctx, filter).Decode(&fixture)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			ctx.JSON(http.StatusNotFound, errorResponse("fixture not found", err))
@@ -206,7 +206,7 @@ func (srv *Server) getFixtureByID(ctx *gin.Context) {
 
 	log.Println("Cache Miss - failed to get fixture data from redis:", err)
 
-	err = srv.collections["fixtures"].FindOne(ctx, filter).Decode(&fixture)
+	err = srv.Collections["fixtures"].FindOne(ctx, filter).Decode(&fixture)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			ctx.JSON(http.StatusNotFound, errorResponse("fixture not found", err))
@@ -246,7 +246,7 @@ func (srv *Server) editFixture(ctx *gin.Context) {
 
 	update := bson.M{"$set": payload}
 
-	result, err := srv.collections["fixtures"].UpdateOne(ctx, filter, update)
+	result, err := srv.Collections["fixtures"].UpdateOne(ctx, filter, update)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("error updating fixture", err))
 		return
@@ -260,7 +260,7 @@ func (srv *Server) editFixture(ctx *gin.Context) {
 	var updatedFixture *db.FixturesParams
 	query := bson.M{"_id": objectID}
 
-	err = srv.collections["fixtures"].FindOne(ctx, query).Decode(&updatedFixture)
+	err = srv.Collections["fixtures"].FindOne(ctx, query).Decode(&updatedFixture)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse("failed to find updated fixture", err))
 		return
@@ -285,7 +285,7 @@ func (srv *Server) removeFixture(ctx *gin.Context) {
 
 	filter := bson.M{"_id": objectID}
 
-	result, err := srv.collections["fixtures"].DeleteOne(ctx, filter)
+	result, err := srv.Collections["fixtures"].DeleteOne(ctx, filter)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse("failed to delete fixture", err))
 		return

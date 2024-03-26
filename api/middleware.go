@@ -8,8 +8,6 @@ import (
 	"sync"
 	"time"
 
-	// "trackit/token"
-
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -33,10 +31,13 @@ func isAdminMiddleware(collections map[string]*mongo.Collection) gin.HandlerFunc
 
 		// check users table to see if the userId has a role of admin
 		var user struct {
+			// FirstName string `bson"firstname"`
 			Role string `bson:"role"`
 		}
 
 		err := collections["users"].FindOne(ctx, bson.M{"_id": userId}).Decode(&user)
+
+		// log.Println("userId:", userId, "user role:", user.Role, "first name:", user.FirstName)
 
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse("failed to check user role", err))
@@ -68,6 +69,8 @@ func authMiddleware() gin.HandlerFunc {
 // getAuthorizationPayload retrieves the authorization payload from the context
 func getAuthorizationPayload(ctx *gin.Context) primitive.ObjectID {
 	token := ctx.GetHeader("Authorization")
+
+	log.Println("token:", token)
 
 	if token == "" {
 		ctx.JSON(http.StatusUnauthorized, errorResponse("unauthorized request", nil))
@@ -136,7 +139,7 @@ func (srv *Server) rateLimit() gin.HandlerFunc {
 	}()
 
 	return func(ctx *gin.Context) {
-		if srv.config.Limiter.ENABLED {
+		if srv.Config.Limiter.ENABLED {
 			ip, _, err := net.SplitHostPort(ctx.Request.RemoteAddr)
 
 			if err != nil {
@@ -150,7 +153,7 @@ func (srv *Server) rateLimit() gin.HandlerFunc {
 			// check if the IP exists in the map, if it doesn't, initialize a new rate limiter and add the IP address and limiter to the map
 			if _, found := clients[ip]; !found {
 				clients[ip] = &client{
-					limiter: rate.NewLimiter(rate.Limit(srv.config.Limiter.RPS), srv.config.Limiter.BURST),
+					limiter: rate.NewLimiter(rate.Limit(srv.Config.Limiter.RPS), srv.Config.Limiter.BURST),
 				}
 			}
 

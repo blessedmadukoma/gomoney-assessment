@@ -5,7 +5,6 @@ import (
 )
 
 func (srv *Server) Routes(router *gin.Engine) {
-	// func Routes(router *gin.Engine, srv *Server) {
 	routes := router.Group("/api")
 	{
 
@@ -25,23 +24,23 @@ func (srv *Server) Routes(router *gin.Engine) {
 		// teams routes
 		teamsRoute := routes.Group("/teams").Use(authMiddleware())
 		{
-			teamsRoute.POST("/", isAdminMiddleware(srv.collections), srv.createTeam)
+			teamsRoute.POST("/", isAdminMiddleware(srv.Collections), srv.createTeam)
 			teamsRoute.GET("/", srv.getTeams)
 			teamsRoute.GET("/search", srv.searchTeams)
 			teamsRoute.GET("/:id", srv.getTeam)
-			teamsRoute.PATCH("/:id", isAdminMiddleware(srv.collections), srv.editTeam)
-			teamsRoute.DELETE("/:id", isAdminMiddleware(srv.collections), srv.removeTeam)
+			teamsRoute.PATCH("/:id", isAdminMiddleware(srv.Collections), srv.editTeam)
+			teamsRoute.DELETE("/:id", isAdminMiddleware(srv.Collections), srv.removeTeam)
 		}
 
 		// fixtures routes
 		fixturesRoute := routes.Group("/fixtures").Use(authMiddleware())
 		{
-			fixturesRoute.POST("/", isAdminMiddleware(srv.collections), srv.createFixture)
+			fixturesRoute.POST("/", isAdminMiddleware(srv.Collections), srv.createFixture)
 			fixturesRoute.GET("/", srv.getFixtures)
 			fixturesRoute.GET("/:id", srv.getFixtureByID)
 			fixturesRoute.GET("/link/:id", srv.getFixtureByLink)
-			fixturesRoute.PATCH("/:id", isAdminMiddleware(srv.collections), srv.editFixture)
-			fixturesRoute.DELETE("/:id", isAdminMiddleware(srv.collections), srv.removeFixture)
+			fixturesRoute.PATCH("/:id", isAdminMiddleware(srv.Collections), srv.editFixture)
+			fixturesRoute.DELETE("/:id", isAdminMiddleware(srv.Collections), srv.removeFixture)
 		}
 	}
 }

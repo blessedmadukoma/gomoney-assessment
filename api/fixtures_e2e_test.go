@@ -31,7 +31,7 @@ func (srv *Server) createTestFixtureData(t *testing.T, ts *httptest.Server) *htt
 		UpdatedAt: time.Now(),
 	}
 
-	_, err := srv.collections["teams"].InsertOne(ctx, homeParams)
+	_, err := srv.Collections["teams"].InsertOne(ctx, homeParams)
 	assert.NoError(t, err)
 
 	awayParams := models.CreateTeamsParams{
@@ -41,7 +41,7 @@ func (srv *Server) createTestFixtureData(t *testing.T, ts *httptest.Server) *htt
 		UpdatedAt: time.Now(),
 	}
 
-	_, err = srv.collections["teams"].InsertOne(ctx, awayParams)
+	_, err = srv.Collections["teams"].InsertOne(ctx, awayParams)
 	assert.NoError(t, err)
 
 	fixtureData := map[string]interface{}{
@@ -69,16 +69,16 @@ func (srv *Server) createTestFixtureData(t *testing.T, ts *httptest.Server) *htt
 func TestCreateFixturesE2E(t *testing.T) {
 	ctx := context.Background()
 
-	mongoclient, collections := db.ConnectMongoDB(ctx, config)
+	mongoclient, Collections := db.ConnectMongoDB(ctx, config)
 
 	defer mongoclient.Disconnect(ctx)
 
-	assert.NotNil(t, collections)
+	assert.NotNil(t, Collections)
 
-	srv, err := NewServer(config, collections, redisclient)
+	srv, err := NewServer(config, Collections, redisclient)
 	assert.NoError(t, err)
 
-	ts := httptest.NewServer(srv.router)
+	ts := httptest.NewServer(srv.Router)
 	defer ts.Close()
 
 	res := srv.createTestFixtureData(t, ts)
@@ -96,16 +96,16 @@ func TestCreateFixturesE2E(t *testing.T) {
 func TestGetFixtures(t *testing.T) {
 	ctx := context.Background()
 
-	mongoclient, collections := db.ConnectMongoDB(ctx, config)
+	mongoclient, Collections := db.ConnectMongoDB(ctx, config)
 
 	defer mongoclient.Disconnect(ctx)
 
-	assert.NotNil(t, collections)
+	assert.NotNil(t, Collections)
 
-	srv, err := NewServer(config, collections, redisclient)
+	srv, err := NewServer(config, Collections, redisclient)
 	assert.NoError(t, err)
 
-	ts := httptest.NewServer(srv.router)
+	ts := httptest.NewServer(srv.Router)
 	defer ts.Close()
 
 	token := srv.obtainFanAuthToken(t, ts)
@@ -134,16 +134,16 @@ func TestGetFixtures(t *testing.T) {
 func TestGetFixtureByLink(t *testing.T) {
 	ctx := context.Background()
 
-	mongoclient, collections := db.ConnectMongoDB(ctx, config)
+	mongoclient, Collections := db.ConnectMongoDB(ctx, config)
 
 	defer mongoclient.Disconnect(ctx)
 
-	assert.NotNil(t, collections)
+	assert.NotNil(t, Collections)
 
-	srv, err := NewServer(config, collections, redisclient)
+	srv, err := NewServer(config, Collections, redisclient)
 	assert.NoError(t, err)
 
-	ts := httptest.NewServer(srv.router)
+	ts := httptest.NewServer(srv.Router)
 	defer ts.Close()
 
 	token := srv.obtainFanAuthToken(t, ts)
@@ -185,16 +185,16 @@ func TestGetFixtureByLink(t *testing.T) {
 func TestGetFixtureByID(t *testing.T) {
 	ctx := context.Background()
 
-	mongoclient, collections := db.ConnectMongoDB(ctx, config)
+	mongoclient, Collections := db.ConnectMongoDB(ctx, config)
 
 	defer mongoclient.Disconnect(ctx)
 
-	assert.NotNil(t, collections)
+	assert.NotNil(t, Collections)
 
-	srv, err := NewServer(config, collections, redisclient)
+	srv, err := NewServer(config, Collections, redisclient)
 	assert.NoError(t, err)
 
-	ts := httptest.NewServer(srv.router)
+	ts := httptest.NewServer(srv.Router)
 	defer ts.Close()
 
 	token := srv.obtainFanAuthToken(t, ts)
@@ -240,16 +240,16 @@ func TestGetFixtureByID(t *testing.T) {
 func TestRemoveFixture(t *testing.T) {
 	ctx := context.Background()
 
-	mongoclient, collections := db.ConnectMongoDB(ctx, config)
+	mongoclient, Collections := db.ConnectMongoDB(ctx, config)
 
 	defer mongoclient.Disconnect(ctx)
 
-	assert.NotNil(t, collections)
+	assert.NotNil(t, Collections)
 
-	srv, err := NewServer(config, collections, redisclient)
+	srv, err := NewServer(config, Collections, redisclient)
 	assert.NoError(t, err)
 
-	ts := httptest.NewServer(srv.router)
+	ts := httptest.NewServer(srv.Router)
 	defer ts.Close()
 
 	token := srv.obtainAdminAuthToken(t, ts)
