@@ -115,7 +115,7 @@ The project is hosted on [here](https://gomoney-league-blessedmadukoma.koyeb.app
    make seed
    ```
 
-3. Use Postman or any API client to interact with the endpoints. Check the file `docs/postman/postman-collection.json` for the postman-collection
+3. Use Postman or any API client to interact with the endpoints. Check the file `docs/postman/Gomoney-assessement.postman_collectionn` for the postman-collection
 
 
 ## API Endpoints

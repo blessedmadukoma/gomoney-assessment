@@ -1,0 +1,468 @@
+{
+	"info": {
+		"_postman_id": "a4236e23-58cf-42f6-bc76-675a1b0ebb01",
+		"name": "Gomoney-assessement",
+		"description": "Mock Premier League API  \nThis project implements an API for managing teams, and providing fixtures for the Mock Premier League. It allows admins to perform CRUD operations on teams and fixtures, including generating unique links for fixtures, and basic users (or fans) to view teams, team information and fixtures.\n\nThe project is hosted on \\[here\\]([https://gomoney-league-blessedmadukoma.koyeb.app](https://gomoney-league-blessedmadukoma.koyeb.app))\n\nFeatures  \n**1\\. Admin Features:**\n\n\\- Signup and login.\n\n\\- Manage teams: add, remove, edit, view.\n\n\\- Create fixtures: add, remove, edit, view.\n\n\\- Generate unique links for fixtures.\n\n**2\\. User/Fan Features:**\n\n\\- Signup and login.\n\n\\- View teams.\n\n\\- View completed fixtures.\n\n\\- View pending fixtures.\n\n\\- Robust search for fixtures and teams.\n\n\\- **Public Access:**\n\n\\- The search API for teams\n\nAuthentication and Session Management  \n\\- Authentication and authorization for admin and user accounts are implemented using Bearer token and JWT.\n\n\\- Redis is used as the session store.\n\nTools/Stack\n\n\\- Golang\n\n\\- MongoDB\n\n\\- Redis\n\n\\- Docker\n\n\\- Postman (for testing)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "13312897"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"try {",
+									"    let responseBody = pm.response.body;",
+									"    let access_token = responseBody.data.access_token;",
+									"  \tlet refresh_token = responseBody.data.refresh_token;",
+									"",
+									"    // Set the token to the environment variable",
+									"    pm.env.set('access_token', access_token);",
+									"    pm.env.set('refresh_token', refresh_token);",
+									"} catch (error) {",
+									"    console.error('Failed to extract token from response:', error);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"blessed@gmail.com\",\n  \"password\": \"blessed\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{BASE_URL}}/auth/login"
+					},
+					"response": []
+				},
+				{
+					"name": "register",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstname\": \"Blessed\",\n  \"lastname\": \"Madukoma\",\n  \"email\": \"blessed@gmail.com\",\n  \"role\": \"admin\",\n  \"password\": \"blessed\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{BASE_URL}}/auth/register"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoint"
+		},
+		{
+			"name": "teams",
+			"item": [
+				{
+					"name": "create-team",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"teamname\": \"Sheffield United\",\n  \"shortname\": \"SHE\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{BASE_URL}}/teams"
+					},
+					"response": []
+				},
+				{
+					"name": "get-teams",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{BASE_URL}}/teams"
+					},
+					"response": []
+				},
+				{
+					"name": "get-team",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/teams/{{team_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"teams",
+								"{{team_id}}"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "search-teams",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/teams/search?q=",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"teams",
+								"search"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								},
+								{
+									"key": "q",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "edit-team",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/teams/{{team_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"teams",
+								"{{team_id}}"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete-team",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/teams/{{team_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"teams",
+								"{{team_id}}"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Teams endpoint"
+		},
+		{
+			"name": "fixtures",
+			"item": [
+				{
+					"name": "create-fixture",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"home\": \"Arsenal FC\",\n  \"away\": \"Manchester United\",\n  \"status\": \"completed\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{BASE_URL}}/fixtures"
+					},
+					"response": []
+				},
+				{
+					"name": "get-fixtures",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "{{BASE_URL}}/fixtures"
+					},
+					"response": []
+				},
+				{
+					"name": "get-fixture",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/fixtures/{{fixture_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"fixtures",
+								"{{fixture_id}}"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get-fixture-by-link",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/fixtures/link/{{fixture_link}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"fixtures",
+								"link",
+								"{{fixture_link}}"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "edit-fixture",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"home\": \"Arsenal FC\",\n  \"away\": \"Manchester United\",\n  \"status\": \"pending\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/fixtures/{{fixture_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"fixtures",
+								"{{fixture_id}}"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete-fixture",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/fixtures/{{team_id}}",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"fixtures",
+								"{{team_id}}"
+							],
+							"query": [
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "Fixtures endpoint"
+		},
+		{
+			"name": "fixtures",
+			"item": []
+		}
+	]
+}
