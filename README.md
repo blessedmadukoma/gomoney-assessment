@@ -2,6 +2,8 @@
 
 This project implements an API for managing teams, and providing fixtures for the Mock Premier League. It allows admins to perform CRUD operations on teams and fixtures, including generating unique links for fixtures, and basic users (or fans) to view teams, team information and fixtures.
 
+The project is hosted on [here](https://gomoney-league-blessedmadukoma.koyeb.app)
+
 ## Features
 
 - **Admin Features:**
@@ -19,7 +21,6 @@ This project implements an API for managing teams, and providing fixtures for th
 
 - **Public Access:**
   - The search API for teams
-  - The search API for fixtures
 
 ## Authentication and Session Management
 
@@ -72,7 +73,6 @@ This project implements an API for managing teams, and providing fixtures for th
    MONGO_INITDB_ROOT_PASSWORD=gomoney
    MONGO_INITDB_DATABASE=gomoney_assessment_db
    MONGODB_HOST=localhost:27020
-   MONGO_DB_DRIVER="postgres"
    MONGO_DB_SOURCE="mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@${MONGODB_HOST}"
 
    REDIS_HOST=localhost
