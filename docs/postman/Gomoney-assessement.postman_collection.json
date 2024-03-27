@@ -535,6 +535,15 @@
 		{
 			"name": "fixtures",
 			"item": []
+		},
+		{
+			"name": "health-check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "{{BASE_URL}}/health"
+			},
+			"response": []
 		}
 	]
 }
