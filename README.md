@@ -2,7 +2,7 @@
 
 This project implements an API for managing teams, and providing fixtures for the Mock Premier League. It allows admins to perform CRUD operations on teams and fixtures, including generating unique links for fixtures, and basic users (or fans) to view teams, team information and fixtures.
 
-The project is hosted on [here](https://gomoney-league-blessedmadukoma.koyeb.app)
+<!-- The project is hosted on [here](https://gomoney-league-blessedmadukoma.koyeb.app) -->
 
 ## Features
 
