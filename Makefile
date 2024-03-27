@@ -15,6 +15,9 @@ dc_down:
 # delete mongodb and redis containers
 	docker-compose down -v
 
+dc_build_up:
+	docker compose up --build -d
+
 seed:
 	go run main.go -seed
 
@@ -28,15 +31,4 @@ air: docs
 test:
 	go test -v -cover ./...
 
-docker-build-and-push:
-	docker build -t gomoney-premier-league .
-	
-	docker images
-	
-	docker tag $(shell docker images -q gomoney-premier-league) blessedmadukoma/gomoney-assessment
-
-	docker login
-    
-	docker push blessedmadukoma/gomoney-assessment:latest
-
-.PHONY:dc_up dc_down sqlc start test server seed docker-build-and-push
+.PHONY:dc_up dc_down sqlc start test server seed dc_build_up
